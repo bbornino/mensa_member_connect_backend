@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual env
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static/
+local_settings.py
+
+# VS Code
+.vscode/
+
+# Pytest / Coverage
+.coverage
+htmlcov/
+.tox/
+.cache/
+.pytest_cache/
+
+# MyPy / Pylint
+.mypy_cache/
+.pytype/
+pylint.log
+
+# Other
+*.DS_Store

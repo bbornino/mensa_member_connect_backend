@@ -1,0 +1,46 @@
+mensa_member_connect/
+├── mensa_member_connect_backend/
+│   ├── mensa_member_connect_backend/
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   ├── mensa_member_connect/
+│   │   ├── models/
+│   │   │   ├── custom_user.py 
+│   │   │   ├── expert.py 
+│   │   │   ├── expertise.py 
+│   │   │   ├── local_group.py 
+│   │   │   ├── connection.py 
+│   │   │   ├── admin_action.py 
+│   │   ├── views/
+│   │   │   ├── custom_user_views.py 
+│   │   │   ├── dashboard_views.py 
+│   │   │   ├── expert_views.py 
+│   │   │   ├── expertise_views.py 
+│   │   │   ├── local_group_views.py 
+│   │   │   ├── connection_views.py 
+│   │   │   ├── admin_action_views.py 
+│   │   ├── serializers/
+│   │   │   ├── custom_user_serializer.py 
+│   │   │   ├── dashboard_serializer.py 
+│   │   │   ├── expert_serializer.py 
+│   │   │   ├── expertise_serializer.py 
+│   │   │   ├── local_group_serializer.py 
+│   │   │   ├── connection_serializer.py 
+│   │   │   ├── admin_action_serializer.py 
+│   │   ├── validators/
+│   │   │   ├── custom_user_validators.py 
+
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── middleware.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   ├── logs/
+│   ├── __init__.py
+│   ├── .env.production
+│   ├── .pylintrc
+│   ├── manage.py
+│   ├── requirements.txt

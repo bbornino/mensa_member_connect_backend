@@ -1,0 +1,26 @@
+# .pylintrc configuration file
+
+[MASTER]
+load-plugins=pylint_django
+init-hook="import sys; sys.path.append('.')"
+
+# Disable line-too-long warnings specifically for migration files
+# This will apply to all files in the migrations folder
+ignore=migrations
+
+[MESSAGES CONTROL]
+# Disable some noisy warnings that conflict with Django conventions
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    no-member
+
+[DESIGN]
+# Django models/views can be large; raise these limits if you hit them
+max-args=10
+max-attributes=12
+
+# Other default configurations can remain as they are, or you can customize them
+# Example: Uncomment below to adjust line length for other files
+# max-line-length=100
