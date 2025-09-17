@@ -13,8 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-from dotenv import load_dotenv
 from logging.handlers import TimedRotatingFileHandler
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -110,9 +110,9 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "postgres",  # database name
-        "USER": "postgres",  # Postgres username
-        "PASSWORD": "FfW48ip7kKmiODFM",  # Postgres password
-        "HOST": "db.ienykhwmwjraqlewbgem.supabase.co",
+        "USER": "postgres.xbqekpsyfldqajcefsjv",  # Postgres username
+        "PASSWORD": "IvPsqi1jxDBQZpbA",  # Postgres password  ipv4 password
+        "HOST": "aws-1-us-east-2.pooler.supabase.com",
         "PORT": "5432",  # default Postgres port
     }
 }
