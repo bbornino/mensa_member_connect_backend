@@ -5,14 +5,18 @@ from mensa_member_connect.models.local_group import LocalGroup
 
 
 class CustomUser(AbstractUser):
-    member_id = models.IntegerField()
-    city = models.CharField(max_length=48)
-    state = models.CharField(max_length=24)
+    member_id = models.IntegerField(null=True, blank=True)
+    city = models.CharField(max_length=48, blank=True, null=True)
+    state = models.CharField(max_length=24, blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
+    role = models.CharField(max_length=16, default="member")  # sensible default
+    status = models.CharField(max_length=24, default="active")  # sensible default
+
     role = models.CharField(max_length=16)
     status = models.CharField(max_length=24)
     local_group_id = models.ForeignKey(
         LocalGroup,
         on_delete=models.CASCADE,
         null=True,
+        blank=True,
     )
