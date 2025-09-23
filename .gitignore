@@ -12,6 +12,7 @@ ENV/
 
 # Django stuff
 *.log
+logs/*.log.*
 *.pot
 *.pyc
 db.sqlite3
