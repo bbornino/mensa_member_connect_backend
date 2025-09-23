@@ -135,7 +135,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
     {
-        "NAME": "mensa_member_connect.custom_user.custom_user_validators.StrongPasswordValidator",
+        "NAME": "mensa_member_connect.validators.custom_user_validators.StrongPasswordValidator"
     },
 ]
 
@@ -166,7 +166,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django logging setup that reads LOG_LEVEL from .env.
 # Logs are stored in logs/django.log (ensure the 'logs/' directory exists).
 # Adjust log level per environment: DEBUG (dev), INFO (staging), WARNING (prod).
-LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG")  # Default to WARNING if not set
+LOG_LEVEL = os.getenv("LOG_LEVEL", "WARNING")  # Default to WARNING if not set
 
 LOGGING = {
     "version": 1,
