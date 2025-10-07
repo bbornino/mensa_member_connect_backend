@@ -23,6 +23,8 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         if self.action == "list_all_users":
             return [IsAdminUser()]
+        if self.action in ["authenticate_user", "register_user"]:
+            return []  # public endpoints, no auth required
         return [IsAuthenticated()]
 
     @action(detail=False, methods=["post"], url_path="authenticate")

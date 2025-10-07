@@ -12,9 +12,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=16, default="member")  # sensible default
     status = models.CharField(max_length=24, default="active")  # sensible default
 
-    role = models.CharField(max_length=16)
-    status = models.CharField(max_length=24)
-    local_group_id = models.ForeignKey(
+    local_group = models.ForeignKey(
         LocalGroup,
         on_delete=models.CASCADE,
         null=True,

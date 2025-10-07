@@ -1,6 +1,9 @@
 # mensa_member_connect/serializers/custom_user_serializers.py
 from rest_framework import serializers
-from django.conf import settings
+
+# from django.conf import settings
+from mensa_member_connect.models.custom_user import CustomUser
+
 
 # from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.serializers.local_group_serializers import (
@@ -8,7 +11,7 @@ from mensa_member_connect.serializers.local_group_serializers import (
 )
 
 
-CustomUser = settings.AUTH_USER_MODEL
+# CustomUser = settings.AUTH_USER_MODEL
 
 
 class CustomUserMiniSerializer(serializers.ModelSerializer):
