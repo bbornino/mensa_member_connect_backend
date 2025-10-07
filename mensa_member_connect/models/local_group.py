@@ -7,4 +7,4 @@ class LocalGroup(models.Model):
     state = models.CharField(max_length=16, default="")
 
     def __str__(self):
-        return self.group_name
+        return str(self.group_name)
