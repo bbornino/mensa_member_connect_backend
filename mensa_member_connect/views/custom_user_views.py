@@ -53,6 +53,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="logout")
     def logout_user(self, request):
+        print("REQUEST DATA:", request.data)
         refresh_token = request.data.get("refresh")
         if refresh_token:
             try:
@@ -67,7 +68,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             {"detail": "No refresh token provided."}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    @action(detail=False, methods=["get"], url_path="profile")
+    @action(detail=False, methods=["get"], url_path="me")
     def user_profile(self, request):
         user = request.user
         return Response(
