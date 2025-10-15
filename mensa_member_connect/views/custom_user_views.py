@@ -53,7 +53,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="logout")
     def logout_user(self, request):
-        print("REQUEST DATA:", request.data)
         refresh_token = request.data.get("refresh")
         if refresh_token:
             try:
