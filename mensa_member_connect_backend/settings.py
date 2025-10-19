@@ -116,13 +116,13 @@ SIMPLE_JWT = {
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "postgres",  # database name
-        "USER": "postgres.xbqekpsyfldqajcefsjv",  # Postgres username
-        "PASSWORD": "IvPsqi1jxDBQZpbA",  # Postgres password  ipv4 password
-        "HOST": "aws-1-us-east-2.pooler.supabase.com",
-        "PORT": "5432",  # default Postgres port
+        "NAME": os.getenv("DB_NAME", "postgres"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", ""),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
         "OPTIONS": {
-            "sslmode": "require",  # enforce SSL
+            "sslmode": os.getenv("DB_SSLMODE", "prefer"),  # 'require' for remote, 'prefer' for local
         },
     }
 }
