@@ -4,7 +4,6 @@ from django.contrib.auth.admin import UserAdmin
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.admin_action import AdminAction
 from mensa_member_connect.models.connection_request import ConnectionRequest
-from mensa_member_connect.models.expert import Expert
 from mensa_member_connect.models.expertise import Expertise
 from mensa_member_connect.models.industry import Industry
 from mensa_member_connect.models.local_group import LocalGroup
@@ -55,22 +54,6 @@ class ConnectionRequestAdmin(admin.ModelAdmin):
     expert_username.short_description = "Expert"
 
 
-class ExpertAdmin(admin.ModelAdmin):
-    list_display = ("id", "user_username", "occupation", "industry_name")
-
-    def user_username(self, obj):
-        return obj.user.username if obj.user_id else "-"
-
-    user_username.admin_order_field = "user__username"
-    user_username.short_description = "User"
-
-    def industry_name(self, obj):
-        return obj.industry.industry_name if obj.industry_id else "-"
-
-    industry_name.admin_order_field = "industry__industry_name"
-    industry_name.short_description = "Industry"
-
-
 class ExpertiseAdmin(admin.ModelAdmin):
     list_display = ("id", "expert_username", "what_offering")
 
@@ -95,7 +78,6 @@ class LocalGroupAdmin(admin.ModelAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(AdminAction, AdminActionAdmin)
 admin.site.register(ConnectionRequest, ConnectionRequestAdmin)
-admin.site.register(Expert, ExpertAdmin)
 admin.site.register(Expertise, ExpertiseAdmin)
 admin.site.register(Industry, IndustryAdmin)
 admin.site.register(LocalGroup, LocalGroupAdmin)
