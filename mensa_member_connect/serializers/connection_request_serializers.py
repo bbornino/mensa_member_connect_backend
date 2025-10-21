@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from mensa_member_connect.models.connection_request import ConnectionRequest
-from mensa_member_connect.serializers.expert_serializers import ExpertMiniSerializer
 from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserMiniSerializer,
 )
@@ -8,7 +7,7 @@ from mensa_member_connect.serializers.custom_user_serializers import (
 
 # List serializer (lightweight)
 class ConnectionRequestListSerializer(serializers.ModelSerializer):
-    expert = ExpertMiniSerializer(source="expert_id", read_only=True)
+    expert = CustomUserMiniSerializer(source="expert_id", read_only=True)
     seeker = CustomUserMiniSerializer(source="seeker_id", read_only=True)
 
     class Meta:
@@ -18,7 +17,7 @@ class ConnectionRequestListSerializer(serializers.ModelSerializer):
 
 # Detail serializer (all fields)
 class ConnectionRequestDetailSerializer(serializers.ModelSerializer):
-    expert = ExpertMiniSerializer(source="expert_id", read_only=True)
+    expert = CustomUserMiniSerializer(source="expert_id", read_only=True)
     seeker = CustomUserMiniSerializer(source="seeker_id", read_only=True)
 
     class Meta:
