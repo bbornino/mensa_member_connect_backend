@@ -11,7 +11,10 @@ from mensa_member_connect.serializers.local_group_serializers import (
 )
 
 
-# CustomUser = settings.AUTH_USER_MODEL
+class CustomUserExpertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["id", "first_name", "last_name", "city", "state", "occupation"]
 
 
 class CustomUserMiniSerializer(serializers.ModelSerializer):
@@ -24,7 +27,7 @@ class CustomUserMiniSerializer(serializers.ModelSerializer):
 
 class CustomUserListSerializer(serializers.ModelSerializer):
     local_group = LocalGroupMiniSerializer(read_only=True)
-    
+
     class Meta:
         model = CustomUser
         fields = [

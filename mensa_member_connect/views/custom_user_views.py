@@ -12,6 +12,7 @@ from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
+    CustomUserExpertSerializer,
 )
 from mensa_member_connect.permissions import IsAdminRole
 
@@ -129,6 +130,26 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     def list_all_users(self, request):
         users = CustomUser.objects.all()
         serializer = CustomUserListSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="experts",
+        permission_classes=[IsAuthenticated],
+    )
+    def list_experts(self, request):
+        """
+        Returns all users who are 'experts'.
+        Defined as having both occupation and background filled in.
+        """
+        experts = (
+            CustomUser.objects.exclude(occupation="")
+            .exclude(background="")
+            .exclude(occupation__isnull=True)
+            .exclude(background__isnull=True)
+        )
+        serializer = CustomUserExpertSerializer(experts, many=True)
         return Response(serializer.data)
 
 
