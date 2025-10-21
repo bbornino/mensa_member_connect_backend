@@ -1,5 +1,6 @@
 # mensa_member_connect/serializers/custom_user_serializers.py
 from rest_framework import serializers
+from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumberField
 
 # from django.conf import settings
 from mensa_member_connect.models.custom_user import CustomUser
@@ -45,6 +46,7 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
 class CustomUserDetailSerializer(serializers.ModelSerializer):
     local_group = LocalGroupMiniSerializer(source="local_group_id", read_only=True)
+    phone = DRFPhoneNumberField(region="US", required=False, allow_null=True)
 
     class Meta:
         model = CustomUser
