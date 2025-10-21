@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from mensa_member_connect.models.custom_user import CustomUser
@@ -12,17 +13,19 @@ from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
 )
+from mensa_member_connect.permissions import IsAdminRole
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserDetailSerializer
+    authentication_classes = [JWTAuthentication]
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
             return [IsAuthenticated()]
         if self.action == "list_all_users":
-            return [IsAdminUser()]
+            return [IsAdminRole()]
         if self.action in ["authenticate_user", "register_user"]:
             return []  # public endpoints, no auth required
         return [IsAuthenticated()]

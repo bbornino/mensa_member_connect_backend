@@ -7,12 +7,13 @@ from mensa_member_connect.serializers.admin_action_serializers import (
     AdminActionDetailSerializer,
     AdminActionListSerializer,
 )
+from mensa_member_connect.permissions import IsAdminRole
 
 
 class AdminActionViewSet(viewsets.ModelViewSet):
     queryset = AdminAction.objects.all()
     authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminRole]
 
     def get_serializer_class(self):
         if self.action == "list":
