@@ -23,17 +23,20 @@ class CustomUserMiniSerializer(serializers.ModelSerializer):
 
 
 class CustomUserListSerializer(serializers.ModelSerializer):
-    # TODO: update from UI table
+    local_group = LocalGroupMiniSerializer(read_only=True)
+    
     class Meta:
         model = CustomUser
         fields = [
             "id",
             "username",
+            "email",
             "first_name",
             "last_name",
             "member_id",
             "role",
             "status",
+            "local_group",
         ]
 
 
