@@ -71,7 +71,7 @@ class IndustryAdmin(admin.ModelAdmin):
 
 
 class LocalGroupAdmin(admin.ModelAdmin):
-    list_display = ("id", "group_name", "city", "state")
+    list_display = ("id", "group_name", "group_number")
 
 
 # Register models with default admin
