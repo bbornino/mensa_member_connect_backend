@@ -1,0 +1,123 @@
+local_group_number,local_group_name
+716,Arkansas Mensa - 716
+704,Baton Rouge Mensa - 704
+403,Bluegrass Mensa - 403
+014,Boston Mensa - 014
+803,Boulder/Front Range Mensa - 803
+333,Broward Mensa - 333
+350,Central Alabama Mensa - 350
+327,Central Florida Mensa - 327
+461,Central Indiana Mensa - 461
+500,Central Iowa Mensa - 500
+070,Central New Jersey Mensa - 070
+130,Central New York Mensa - 130
+730,Central Oklahoma Mensa - 730
+170,Central Pennsylvania Mensa - 170
+290,Central South Carolina Mensa - 290
+786,Central Texas Mensa - 786
+931,Channel Islands Mensa - 931
+280,Charlotte - Blue Ridge Mensa - 280
+373,Chattanooga Mensa - 373
+463,Chicago Area Mensa - 463
+452,Cincinnati Area Mensa - 452
+440,Cleveland Area Mensa - 440
+294,Coastal Carolina Mensa - 294
+989,Columbia River Mensa - 989
+430,Columbus Area Mensa - 430
+010,Connecticut/Western Massachusetts Mensa - 010
+450,Dayton Area Mensa - 450
+197,Delaware Mensa - 197
+080,Delaware Valley Mensa - 080
+800,Denver Mensa - 800
+442,East Central Ohio Mensa - 442
+740,Eastern Oklahoma Mensa - 740
+990,Eastern Washington/Northern Idaho/Montana - 990
+287,French Broad Mensa - 287
+900,Greater Los Angeles Area Mensa - 900
+100,Greater New York Mensa - 100
+850,Greater Phoenix Mensa - 850
+770,Gulf Coast Mensa - 770
+615,Heart of Illinois Mensa - 615
+811,High Mountain Mensa - 811
+520,Iowa-Illinois Mensa - 520
+670,Kansas Sunflower Mensa - 670
+400,Kentuckiana Mensa - 400
+181,Lehigh Pocono Mensa - 181
+040,Maine Mensa - 040
+342,Manasota Mensa - 342
+210,Maryland Mensa - 210
+380,Memphis Mensa - 380
+760,Mensa 76 - 760
+995,Mensa Alaska - 995
+962,Mensa Hawaii - 962
+300,Mensa In Georgia - 300
+275,Mensa of Eastern North Carolina - 275
+322,Mensa of Jacksonville - 322
+120,Mensa of Northeastern New York - 120
+980,Mensa of Western Washington - 980
+530,Mensa of Wisconsin - 530
+200,Metropolitan Washington Mensa - 200
+330,Miami Mensa - 330
+640,Mid-America Mensa - 640
+124,Mid-Hudson Mensa - 124
+488,Mid-Michigan Mensa - 488
+370,Middle Tennessee Mensa - 370
+550,Minnesota Mensa - 550
+386,Mississippi Mensa - 386
+655,Missouri Ozarks Mensa - 655
+939,Monterey County Mensa - 939
+360,Montgomery/Wiregrass Mensa - 360
+680,Nebraska-Western Iowa Mensa - 680
+030,New Hampshire Mensa - 030
+870,New Mexico Mensa - 870
+700,New Orleans Mensa - 700
+000,No group assigned - 000
+356,North Alabama Mensa - 356
+585,North Dakota Mensa - 585
+326,North Florida Mensa - 326
+750,North Texas Mensa - 750
+467,Northeast Indiana Mensa - 467
+710,Northern Louisiana Mensa - 710
+496,Northern Michigan Mensa - 496
+893,Northern Nevada Mensa - 893
+071,Northern New Jersey Mensa - 071
+325,Northwest Florida Mensa - 325
+926,Orange County Mensa - 926
+970,Oregon Mensa - 970
+334,Palm Beach Area Mensa - 334
+797,Permian Basin Mensa - 797
+293,Piedmont Area Mensa - 293
+808,Plains and Peaks Mensa - 808
+954,Redwood Empire Mensa - 954
+028,Rhode Island Mensa - 028
+224,Richmond Area Mensa - 224
+144,Rochester Area Mensa - 144
+953,Sacramento Regional Mensa - 953
+920,San Diego Mensa - 920
+940,San Francisco Regional Mensa - 940
+627,Sangamon Valley Mensa - 627
+314,Savannah Area Mensa of Georgia - 314
+377,Smoky Mountain Mensa - 377
+365,South Coast Mensa - 365
+570,South Dakota Mensa - 570
+394,South Mississippi Mensa - 394
+780,South Texas Mensa - 780
+480,Southeast Michigan Mensa - 480
+066,Southern Connecticut Mensa - 066
+836,Southern Idaho Mensa - 836
+890,Southern Nevada Mensa - 890
+339,Southwest by South Florida Mensa - 339
+329,Space Coast Area Mensa - 329
+620,St. Louis Area Mensa - 620
+323,Tallahassee Area  Mensa - 323
+335,Tampa Bay Mensa - 335
+233,Tidewater Mensa - 233
+270,Triad Mensa - 270
+857,Tucson Mensa - 857
+376,Upper East Tennessee Mensa - 376
+840,Utah Mensa - 840
+247,Vandalia Mensa - 247
+050,Vermont Mensa - 050
+140,Western New York Mensa - 140
+150,Western Pennsylvania Mensa - 150
+820,Wyoming Mountain Mensa - 820

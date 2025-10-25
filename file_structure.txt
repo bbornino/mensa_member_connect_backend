@@ -29,7 +29,6 @@ mensa_member_connect/
 │   │   │   ├── admin_action_serializer.py 
 │   │   ├── validators/
 │   │   │   ├── custom_user_validators.py 
-
 │   │   ├── migrations/
 │   │   ├── __init__.py
 │   │   ├── admin.py
@@ -39,6 +38,11 @@ mensa_member_connect/
 │   │   ├── serializers.py
 │   │   ├── views.py
 │   ├── logs/
+│   ├── scripts/
+│   │   ├── localgroup.txt      # sample csv input file
+│   │   ├── seed_groups.py      # sample private endpoint script
+│   │   ├── seed_users.py       # sample public endpoint script
+│   │   ├── users.json          # sample json input file
 │   ├── __init__.py
 │   ├── .env.production
 │   ├── .pylintrc
