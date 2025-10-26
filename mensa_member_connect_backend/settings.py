@@ -32,12 +32,16 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-23)@vm5vpch=0%*d(p^x092cfxl(hrov=3m1wep2)ll7@g5(@x")
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-23)@vm5vpch=0%*d(p^x092cfxl(hrov=3m1wep2)ll7@g5(@x"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
+ALLOWED_HOSTS = (
+    os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
+)
 
 
 # Application definition
@@ -75,7 +79,11 @@ MIDDLEWARE = [
 
 # CORS Settings
 CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "False") == "True"
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if os.getenv("CORS_ALLOWED_ORIGINS") else []
+CORS_ALLOWED_ORIGINS = (
+    os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+    if os.getenv("CORS_ALLOWED_ORIGINS")
+    else []
+)
 
 AUTH_USER_MODEL = "mensa_member_connect.CustomUser"
 
@@ -118,10 +126,11 @@ SIMPLE_JWT = {
 
 # Database Configuration
 # Support both Railway's DATABASE_URL and individual environment variables
-if 'DATABASE_URL' in os.environ:
+if "DATABASE_URL" in os.environ:
     import dj_database_url
+
     DATABASES = {
-        'default': dj_database_url.config(
+        "default": dj_database_url.config(
             conn_max_age=600,
             conn_health_checks=True,
         )
@@ -136,7 +145,9 @@ else:
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
             "OPTIONS": {
-                "sslmode": os.getenv("DB_SSLMODE", "prefer"),  # 'require' for remote, 'prefer' for local
+                "sslmode": os.getenv(
+                    "DB_SSLMODE", "prefer"
+                ),  # 'require' for remote, 'prefer' for local
             },
         }
     }
@@ -242,7 +253,9 @@ LOGGING = {
     "loggers": {
         # Log database queries
         "django.db.backends": {
-            "level": LOG_LEVEL,  # You can adjust this to INFO or ERROR as needed
+            "level": os.getenv(
+                "DB_LOG_LEVEL", LOG_LEVEL
+            ),  # Use DB_LOG_LEVEL if set, otherwise fallback
             "handlers": ["file", "console"],  # Log to both file and console
             "propagate": False,  # Prevent it from propagating to the root logger
         },
