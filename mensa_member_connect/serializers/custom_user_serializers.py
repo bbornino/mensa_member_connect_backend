@@ -5,6 +5,7 @@ from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumbe
 # from django.conf import settings
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.local_group import LocalGroup
+from mensa_member_connect.models.expertise import Expertise
 
 
 # from mensa_member_connect.models.custom_user import CustomUser
@@ -12,11 +13,37 @@ from mensa_member_connect.serializers.local_group_serializers import (
     LocalGroupMiniSerializer,
 )
 
+# from mensa_member_connect.serializers.industry_serializers import IndustryMiniSerializer
+from mensa_member_connect.serializers.expertise_serializers import (
+    ExpertiseDetailSerializer,
+)
+
 
 class CustomUserExpertSerializer(serializers.ModelSerializer):
+    industry = serializers.CharField(source="industry.industry_name", read_only=True)
+    expertise = serializers.SerializerMethodField()
+
     class Meta:
         model = CustomUser
-        fields = ["id", "first_name", "last_name", "city", "state", "occupation"]
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "city",
+            "state",
+            "occupation",
+            "industry",
+            "background",
+            "availability_status",
+            "show_contact_info",
+            "expertise",
+        ]
+
+    def get_expertise(self, obj):
+        # Grab first 2 expertises only for now
+        qs = Expertise.objects.filter(user=obj)[:2]
+        # Use existing serializer
+        return ExpertiseDetailSerializer(qs, many=True).data
 
 
 class CustomUserMiniSerializer(serializers.ModelSerializer):
