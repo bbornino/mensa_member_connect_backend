@@ -3,7 +3,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from mensa_member_connect.views.custom_user_views import CustomUserViewSet
+from mensa_member_connect.views.custom_user_views import (
+    CustomUserViewSet,
+    TokenRefreshCustomView,
+)
 from mensa_member_connect.views.expertise_views import ExpertiseViewSet
 from mensa_member_connect.views.connection_request_views import ConnectionRequestViewSet
 from mensa_member_connect.views.industry_views import IndustryViewSet
@@ -25,4 +28,5 @@ router.register(r"admin_actions", AdminActionViewSet, basename="admin_action")
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
+    path("api/token/refresh/", TokenRefreshCustomView.as_view(), name="token_refresh"),
 ]
