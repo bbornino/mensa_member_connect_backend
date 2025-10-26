@@ -19,7 +19,7 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action in ["list", "by_user"]:
+        if self.action in ["list"]:
             return ExpertiseListSerializer
         return ExpertiseDetailSerializer
 
