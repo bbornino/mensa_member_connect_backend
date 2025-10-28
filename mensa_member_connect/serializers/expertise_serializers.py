@@ -11,6 +11,7 @@ class ExpertiseListSerializer(serializers.ModelSerializer):
 
 # Detail serializer (all fields)
 class ExpertiseDetailSerializer(serializers.ModelSerializer):
+    area_of_expertise_name = serializers.CharField(source='area_of_expertise.industry_name', read_only=True)
 
     class Meta:
         model = Expertise

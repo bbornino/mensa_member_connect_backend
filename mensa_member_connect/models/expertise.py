@@ -1,11 +1,19 @@
 from django.db import models
 from mensa_member_connect.models.custom_user import CustomUser
+from mensa_member_connect.models.industry import Industry
 
 
 class Expertise(models.Model):
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="expertises",
+    )
+    area_of_expertise = models.ForeignKey(
+        Industry,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="expertises",
