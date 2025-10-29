@@ -13,20 +13,22 @@ from mensa_member_connect.serializers.local_group_serializers import (
     LocalGroupMiniSerializer,
 )
 
-# from mensa_member_connect.serializers.industry_serializers import IndustryMiniSerializer
+from mensa_member_connect.serializers.industry_serializers import IndustryListSerializer
 from mensa_member_connect.serializers.expertise_serializers import (
     ExpertiseDetailSerializer,
 )
 
 
 class CustomUserExpertSerializer(serializers.ModelSerializer):
-    industry = serializers.CharField(source="industry.industry_name", read_only=True)
+    industry = IndustryListSerializer(read_only=True)
+    local_group = LocalGroupMiniSerializer(read_only=True)
     expertise = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = [
             "id",
+            "username",
             "first_name",
             "last_name",
             "city",
@@ -36,14 +38,14 @@ class CustomUserExpertSerializer(serializers.ModelSerializer):
             "background",
             "availability_status",
             "show_contact_info",
+            "local_group",
             "expertise",
         ]
 
     def get_expertise(self, obj):
-        # Grab first 2 expertises only for now
-        qs = Expertise.objects.filter(user=obj)[:2]
-        # Use existing serializer
-        return ExpertiseDetailSerializer(qs, many=True).data
+        # Use prefetched expertises to avoid N+1 queries
+        expertises = obj.expertises.all()
+        return ExpertiseDetailSerializer(expertises, many=True).data
 
 
 class CustomUserMiniSerializer(serializers.ModelSerializer):
@@ -73,10 +75,16 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
 
 class CustomUserDetailSerializer(serializers.ModelSerializer):
-    local_group = serializers.PrimaryKeyRelatedField(
-        queryset=LocalGroup.objects.all(), required=False, allow_null=True
-    )
+    local_group = LocalGroupMiniSerializer(read_only=True)
+    industry = IndustryListSerializer(read_only=True)
     phone = DRFPhoneNumberField(region="US", required=False, allow_null=True)
+    local_group_id = serializers.PrimaryKeyRelatedField(
+        queryset=LocalGroup.objects.all(), 
+        source='local_group', 
+        write_only=True, 
+        required=False, 
+        allow_null=True
+    )
 
     class Meta:
         model = CustomUser

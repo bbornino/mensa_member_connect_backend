@@ -27,7 +27,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         if self.action == "list_all_users":
             return [IsAdminRole()]
-        if self.action in ["authenticate_user", "register_user"]:
+        if self.action in ["authenticate_user", "register_user", "list_experts"]:
             return []  # public endpoints, no auth required
         return [IsAuthenticated()]
 
@@ -136,19 +136,16 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["get"],
         url_path="experts",
-        permission_classes=[IsAuthenticated],
+        permission_classes=[],  # Make it public
     )
     def list_experts(self, request):
         """
         Returns all users who are 'experts'.
-        Defined as having both occupation and background filled in.
+        Defined as having at least one expertise record.
         """
-        experts = (
-            CustomUser.objects.exclude(occupation="")
-            .exclude(background="")
-            .exclude(occupation__isnull=True)
-            .exclude(background__isnull=True)
-        )
+        experts = CustomUser.objects.filter(expertises__isnull=False).distinct().select_related(
+            'industry', 'local_group'
+        ).prefetch_related('expertises__area_of_expertise')
         serializer = CustomUserExpertSerializer(experts, many=True)
         return Response(serializer.data)
 

@@ -6,7 +6,7 @@ from mensa_member_connect.models.industry import Industry
 class IndustryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Industry
-        fields = ["id", "industry_name"]
+        fields = ["id", "industry_name", "industry_description"]
 
 
 class IndustryMiniSerializer(serializers.ModelSerializer):
