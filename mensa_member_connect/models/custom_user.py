@@ -22,7 +22,7 @@ class CustomUser(AbstractUser):
         related_name="user_experts",
     )
     background = models.TextField(default="", blank=True, null=True)
-    # photo = models.CharField(max_length=128, default='')      # TODO: Will eventually add when implementation is determined
+    profile_photo = models.BinaryField(null=True, blank=True)
     availability_status = models.CharField(max_length=32, default="")
     show_contact_info = models.BooleanField(default=False)
 
