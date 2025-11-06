@@ -5,10 +5,7 @@ from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumbe
 # from django.conf import settings
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.local_group import LocalGroup
-from mensa_member_connect.models.expertise import Expertise
 
-
-# from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.serializers.local_group_serializers import (
     LocalGroupMiniSerializer,
 )
@@ -75,17 +72,23 @@ class CustomUserListSerializer(serializers.ModelSerializer):
 
 
 class CustomUserDetailSerializer(serializers.ModelSerializer):
-    local_group = LocalGroupMiniSerializer(read_only=True)
     industry = IndustryListSerializer(read_only=True)
     phone = DRFPhoneNumberField(region="US", required=False, allow_null=True)
     local_group_id = serializers.PrimaryKeyRelatedField(
-        queryset=LocalGroup.objects.all(), 
-        source='local_group', 
-        write_only=True, 
-        required=False, 
-        allow_null=True
+        queryset=LocalGroup.objects.all(),
+        source="local_group",
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
+
+    local_group_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = "__all__"
+
+    def get_local_group_name(self, obj):
+        if obj.local_group:
+            return obj.local_group.group_name  # no "- 94"
+        return None
