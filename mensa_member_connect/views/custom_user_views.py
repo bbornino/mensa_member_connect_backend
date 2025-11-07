@@ -3,6 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -86,6 +87,39 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return Response({"message": "User info updated successfully."})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="photo",
+        parser_classes=[MultiPartParser, FormParser],
+    )
+    def upload_photo(self, request, pk=None):
+        """
+        Uploads and stores a user's profile photo as binary data.
+        Endpoint: POST /api/users/{id}/photo/
+        """
+        user = self.get_object()
+        file = request.FILES.get("profile_photo")
+
+        if not file:
+            return Response(
+                {"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Read file bytes into the BinaryField
+            user.profile_photo = file.read()
+            user.save()
+
+            return Response(
+                {"message": "Profile photo uploaded successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     @action(detail=False, methods=["post"], url_path="register")
     def register_user(self, request):
         username = request.data.get("username")
@@ -143,9 +177,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         Returns all users who are 'experts'.
         Defined as having at least one expertise record.
         """
-        experts = CustomUser.objects.filter(expertises__isnull=False).distinct().select_related(
-            'industry', 'local_group'
-        ).prefetch_related('expertises__area_of_expertise')
+        experts = (
+            CustomUser.objects.filter(expertises__isnull=False)
+            .distinct()
+            .select_related("industry", "local_group")
+            .prefetch_related("expertises__area_of_expertise")
+        )
         serializer = CustomUserExpertSerializer(experts, many=True)
         return Response(serializer.data)
 
