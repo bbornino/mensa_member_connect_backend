@@ -83,6 +83,7 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
     )
 
     local_group_name = serializers.SerializerMethodField()
+    profile_photo = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -91,4 +92,12 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
     def get_local_group_name(self, obj):
         if obj.local_group:
             return obj.local_group.group_name  # no "- 94"
+        return None
+
+    def get_profile_photo(self, obj):
+        if obj.profile_photo:
+            # If using BinaryField, base64 encode it
+            import base64
+
+            return base64.b64encode(obj.profile_photo).decode("utf-8")
         return None
