@@ -11,7 +11,7 @@ class CustomUser(AbstractUser):
     state = models.CharField(max_length=24, blank=True, null=True)
     phone = PhoneNumberField(blank=True, null=True)
     role = models.CharField(max_length=16, default="member")  # sensible default
-    status = models.CharField(max_length=24, default="active")  # sensible default
+    status = models.CharField(max_length=24, default="pending")  # sensible default
 
     occupation = models.CharField(max_length=128, default="")
     industry = models.ForeignKey(
