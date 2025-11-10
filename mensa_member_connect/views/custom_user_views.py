@@ -106,11 +106,11 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 {"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate file size (5MB limit)
-        MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
+        # Validate file size (2MB limit)
+        MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB in bytes
         if file.size > MAX_FILE_SIZE:
             return Response(
-                {"error": "Image file size must be less than 5MB."},
+                {"error": "Image file size must be less than 2MB."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
