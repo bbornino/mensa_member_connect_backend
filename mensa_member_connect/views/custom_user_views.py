@@ -106,6 +106,22 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 {"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Validate file size (5MB limit)
+        MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
+        if file.size > MAX_FILE_SIZE:
+            return Response(
+                {"error": "Image file size must be less than 5MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate file type
+        valid_content_types = ["image/jpeg", "image/jpg", "image/png", "image/gif"]
+        if file.content_type not in valid_content_types:
+            return Response(
+                {"error": "Please upload a JPG, PNG, or GIF image."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         try:
             # Read file bytes into the BinaryField
             user.profile_photo = file.read()
