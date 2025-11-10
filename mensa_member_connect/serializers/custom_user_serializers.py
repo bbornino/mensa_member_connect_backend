@@ -1,3 +1,5 @@
+import base64
+
 # mensa_member_connect/serializers/custom_user_serializers.py
 from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumberField
@@ -16,10 +18,21 @@ from mensa_member_connect.serializers.expertise_serializers import (
 )
 
 
+def _detect_image_format(photo_bytes: bytes) -> str:
+    if photo_bytes.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+    if photo_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if photo_bytes.startswith(b"GIF87a") or photo_bytes.startswith(b"GIF89a"):
+        return "gif"
+    return "jpeg"
+
+
 class CustomUserExpertSerializer(serializers.ModelSerializer):
     industry = IndustryListSerializer(read_only=True)
     local_group = LocalGroupMiniSerializer(read_only=True)
     expertise = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -37,12 +50,22 @@ class CustomUserExpertSerializer(serializers.ModelSerializer):
             "show_contact_info",
             "local_group",
             "expertise",
+            "photo",
         ]
 
     def get_expertise(self, obj):
         # Use prefetched expertises to avoid N+1 queries
         expertises = obj.expertises.all()
         return ExpertiseDetailSerializer(expertises, many=True).data
+
+    def get_photo(self, obj):
+        if not obj.profile_photo:
+            return None
+
+        photo_bytes = bytes(obj.profile_photo)
+        image_format = _detect_image_format(photo_bytes)
+        base64_data = base64.b64encode(photo_bytes).decode("utf-8")
+        return f"data:image/{image_format};base64,{base64_data}"
 
 
 class CustomUserMiniSerializer(serializers.ModelSerializer):
