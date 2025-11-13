@@ -53,17 +53,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "rest_framework_simplejwt",
+    # Third-party apps
+    "rest_framework",  # Django REST Framework
+    "rest_framework_simplejwt",  # JWT Authentication
     "rest_framework_simplejwt.token_blacklist",
-    "corsheaders",
+    "corsheaders",  # For cross-origin requests
+    "django_environ",  # (optional) for managing .env vars cleanly
+    "whitenoise.runserver_nostatic",  # Optional helper for static serving in dev
     "mensa_member_connect",
 ]
 
 MIDDLEWARE = [
+    # CORS — must come before CommonMiddleware
     "corsheaders.middleware.CorsMiddleware",
+    # Security and static file handling
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    # Core Django middleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -200,6 +206,52 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+# ==============================
+# EMAIL CONFIGURATION
+# ==============================
+# Django email settings for sending system messages, verification emails,
+# and password resets via Mailgun SMTP.
+# Reference: https://docs.djangoproject.com/en/5.1/topics/email/
+# Mailgun docs: https://help.mailgun.com/hc/en-us/articles/203380100
+
+# - Mailgun requires verified sending domains and proper DNS (SPF, DKIM, MX).
+# - Use port 587 with TLS unless you have a firewall issue — ports 25 or 2525 also work.
+# - Port 465 requires EMAIL_USE_SSL=True and EMAIL_USE_TLS=False.
+# - Keep EMAIL_HOST_PASSWORD secure — store it in environment variables or a secret vault.
+# - For local testing, you can switch to 'django.core.mail.backends.console.EmailBackend'
+
+# Default sender address for outgoing emails
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@namme.us")
+
+# Backend to handle email delivery
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+)
+
+# Mailgun SMTP host and ports:
+# 25, 587, and 2525 = STARTTLS (recommended)
+# 465 = SSL/TLS (legacy)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.mailgun.org")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))  # use 587 for STARTTLS
+
+# Mailgun SMTP credentials
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "postmaster@namme.us")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+
+# Security settings
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("1", "true", "yes")
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ("1", "true", "yes")
+
+# Optional settings
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
+EMAIL_SUBJECT_PREFIX = os.environ.get("EMAIL_SUBJECT_PREFIX", "[MENSA] ")
+
+# Admin and Manager notifications
+ADMINS = [
+    ("Admin", os.environ.get("ADMIN_EMAIL", "admin@namme.us")),
+]
+MANAGERS = ADMINS
 
 # ==============================
 # LOGGING CONFIGURATION
