@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",  # JWT Authentication
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",  # For cross-origin requests
-    "django_environ",  # (optional) for managing .env vars cleanly
     "whitenoise.runserver_nostatic",  # Optional helper for static serving in dev
     "mensa_member_connect",
 ]
