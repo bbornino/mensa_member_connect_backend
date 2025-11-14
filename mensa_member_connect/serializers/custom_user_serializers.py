@@ -7,6 +7,7 @@ from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumbe
 # from django.conf import settings
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.local_group import LocalGroup
+from mensa_member_connect.models.industry import Industry
 
 from mensa_member_connect.serializers.local_group_serializers import (
     LocalGroupMiniSerializer,
@@ -100,6 +101,13 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
     local_group_id = serializers.PrimaryKeyRelatedField(
         queryset=LocalGroup.objects.all(),
         source="local_group",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+    industry_id = serializers.PrimaryKeyRelatedField(
+        queryset=Industry.objects.all(),
+        source="industry",
         write_only=True,
         required=False,
         allow_null=True,
