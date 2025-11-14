@@ -9,7 +9,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Exists, OuterRef
 from mensa_member_connect.models.custom_user import CustomUser
+from mensa_member_connect.models.expertise import Expertise
 from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
@@ -178,7 +180,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         detail=False, methods=["get"], url_path="all", permission_classes=[IsAdminUser]
     )
     def list_all_users(self, request):
-        users = CustomUser.objects.all()
+        expertise_exists = Expertise.objects.filter(user=OuterRef("pk"))
+        users = (
+            CustomUser.objects.all()
+            .annotate(is_expert=Exists(expertise_exists))
+            .select_related("local_group")
+        )
         serializer = CustomUserListSerializer(users, many=True)
         return Response(serializer.data)
 

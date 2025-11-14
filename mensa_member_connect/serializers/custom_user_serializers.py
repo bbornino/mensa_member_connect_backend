@@ -79,6 +79,7 @@ class CustomUserMiniSerializer(serializers.ModelSerializer):
 
 class CustomUserListSerializer(serializers.ModelSerializer):
     local_group = LocalGroupMiniSerializer(read_only=True)
+    is_expert = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CustomUser
@@ -92,6 +93,7 @@ class CustomUserListSerializer(serializers.ModelSerializer):
             "role",
             "status",
             "local_group",
+            "is_expert",
         ]
 
 
