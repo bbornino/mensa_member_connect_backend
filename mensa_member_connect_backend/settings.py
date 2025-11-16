@@ -247,6 +247,7 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 EMAIL_SUBJECT_PREFIX = os.environ.get("EMAIL_SUBJECT_PREFIX", "[MENSA] ")
 
 # Admin and Manager notifications
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@namme.us")
 ADMINS = [
     ("Admin", os.environ.get("ADMIN_EMAIL", "admin@namme.us")),
 ]
@@ -302,6 +303,11 @@ LOGGING = {
         },
     },
     "loggers": {
+        "mensa_member_connect": {
+            "handlers": ["console", "file"],
+            "level": LOG_LEVEL,
+            "propagate": False,  # Prevents double logging
+        },
         # Log database queries
         "django.db.backends": {
             "level": os.getenv(
