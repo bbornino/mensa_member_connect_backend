@@ -27,9 +27,10 @@ mensa_member_connect/
 │   │   │   ├── local_group_serializer.py 
 │   │   │   ├── connection_serializer.py 
 │   │   │   ├── admin_action_serializer.py 
+│   │   ├── utils/
+│   │   │   ├── email_utils.py 
 │   │   ├── validators/
-│   │   │   ├── custom_user_validators.py 
-│   │   ├── migrations/
+│   │   │   ├── custom_user_validators.py │   │   ├── migrations/
 │   │   ├── __init__.py
 │   │   ├── admin.py
 │   │   ├── apps.py

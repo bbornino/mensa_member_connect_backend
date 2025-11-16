@@ -1,4 +1,5 @@
 # mensa_member_connect/views/custom_user_views.py
+import logging
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -18,6 +19,13 @@ from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserExpertSerializer,
 )
 from mensa_member_connect.permissions import IsAdminRole
+from mensa_member_connect.utils.email_utils import (
+    notify_admin_new_registration,
+    notify_user_registration,
+    notify_user_approval,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class CustomUserViewSet(viewsets.ModelViewSet):
@@ -80,13 +88,61 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         serializer = CustomUserDetailSerializer(user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["patch"], url_path="update")
-    def update_user_info(self, request):
-        user = request.user
-        serializer = CustomUserDetailSerializer(user, data=request.data, partial=True)
+    def update(self, request, *args, **kwargs):
+        # @action(detail=False, methods=["patch"], url_path="update")
+        user = self.request.user  # the requesting user (admin or self)
+        target_user = self.get_object()  # the user being updated
+
+        logger.info(
+            "[USER_UPDATE] User %s attempting to update target user ID=%s",
+            user.username,
+            target_user.id,
+        )
+
+        old_status = target_user.status
+
+        serializer = CustomUserDetailSerializer(
+            target_user, data=request.data, partial=True
+        )
+
         if serializer.is_valid():
             serializer.save()
+            print("After save:", target_user.status)
+
+            logger.info(
+                "[USER_UPDATE] Successfully updated user ID=%s by user %s. Status was: %s. Status is now: %s",
+                target_user.id,
+                user.username,
+                old_status,
+                target_user.status,
+            )
+
+            target_user.refresh_from_db()
+
+            # Send email if status changed to active
+            if old_status != "active" and target_user.status == "active":
+
+                try:
+                    notify_user_approval(target_user.email, target_user.get_full_name())
+                    logger.info(
+                        "[EMAIL] Sent approval notification to user: %s",
+                        target_user.email,
+                    )
+                except Exception as e:
+                    logger.error(
+                        "[EMAIL] Failed to send approval notification to user %s: %s",
+                        target_user.email,
+                        e,
+                    )
+
             return Response({"message": "User info updated successfully."})
+
+        logger.warning(
+            "[USER_UPDATE] Validation errors when updating user ID=%s by user %s: %s",
+            target_user.id,
+            user.username,
+            serializer.errors,
+        )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(
@@ -146,32 +202,85 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         last_name = request.data.get("last_name")
         password = request.data.get("password")
 
+        logger.info(
+            "[USER_REG] Attempting registration for username=%s, email=%s",
+            username,
+            email,
+        )
+
         if not all([username, email, first_name, last_name, password]):
+            logger.warning(
+                "[USER_REG] Registration failed: missing fields for email=%s", email
+            )
             return Response(
                 {"error": "All fields are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if CustomUser.objects.filter(username=username).exists():
+            logger.warning(
+                "[USER_REG] Registration failed: username already exists: %s", username
+            )
             return Response(
                 {"error": "Username already exists."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if CustomUser.objects.filter(email=email).exists():
+            logger.warning(
+                "[USER_REG] Registration failed: email already exists: %s", email
+            )
             return Response(
                 {"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST
             )
         try:
             validate_password(password)
         except Exception as e:  # TODO: narrow this exception later
+            logger.warning(
+                "[USER_REG] Registration failed: password validation failed for email=%s: %s",
+                email,
+                e,
+            )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        CustomUser.objects.create_user(
+        new_user = CustomUser.objects.create_user(
             username=username,
             email=email,
             first_name=first_name,
             last_name=last_name,
             password=password,
         )
+
+        logger.info(
+            "[USER_REG] Successfully created user: username=%s, email=%s",
+            username,
+            email,
+        )
+
+        # Notify admin and user
+        try:
+            notify_user_registration(new_user.email, new_user.get_full_name())
+            logger.info(
+                "[EMAIL] Sent registration confirmation to user: %s", new_user.email
+            )
+        except Exception as e:
+            logger.error(
+                "[EMAIL] Failed to send registration confirmation to user %s: %s",
+                new_user.email,
+                e,
+            )
+
+        try:
+            notify_admin_new_registration(new_user.email, new_user.get_full_name())
+            logger.info(
+                "[EMAIL] Sent new registration notification to admin for user: %s",
+                new_user.email,
+            )
+        except Exception as e:
+            logger.error(
+                "[EMAIL] Failed to notify admin about new user %s: %s",
+                new_user.email,
+                e,
+            )
+
         return Response(
             {"message": "User successfully registered."}, status=status.HTTP_201_CREATED
         )
