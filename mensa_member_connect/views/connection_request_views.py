@@ -1,8 +1,12 @@
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
+# mensa_member_connect/views/connection_request_views.py
+import logging
+
+# from rest_framework.decorators import action
+# from rest_framework.response import Response
+# from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from mensa_member_connect.models.custom_user import CustomUser
@@ -14,9 +18,12 @@ from mensa_member_connect.serializers.connection_request_serializers import (
 
 from mensa_member_connect.utils.email_utils import notify_expert_new_message
 
+logger = logging.getLogger(__name__)
+
 
 class ConnectionRequestViewSet(viewsets.ModelViewSet):
     queryset = ConnectionRequest.objects.all()
+    serializer_class = ConnectionRequestDetailSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -27,34 +34,49 @@ class ConnectionRequestViewSet(viewsets.ModelViewSet):
             return ConnectionRequestDetailSerializer
         return ConnectionRequestDetailSerializer
 
-    @action(detail=False, methods=["post"], url_path="send_request")
-    def send_request(self, request):
-        """
-        Seeker sends a connection request to an expert.
-        """
-        seeker = request.user
-        expert_id = request.data.get("expert_id")
-        message = request.data.get("message", "")
-
-        if not expert_id:
-            return Response(
-                {"error": "expert_id is required."}, status=status.HTTP_400_BAD_REQUEST
-            )
-
+    def perform_create(self, serializer):
         try:
-            expert = CustomUser.objects.get(id=expert_id)
-        except CustomUser.DoesNotExist:
-            return Response(
-                {"error": "Expert not found."}, status=status.HTTP_404_NOT_FOUND
+            user: CustomUser = self.request.user  # type: ignore[assignment]
+
+            if not user.is_authenticated:
+                raise PermissionDenied(
+                    "You must be logged in to send a connection request."
+                )
+
+            expert = serializer.validated_data.get("expert")
+
+            if expert is None:
+                logger.error(
+                    "Attempted to create a connection request without an expert. Payload: %s",
+                    self.request.data,  # type: ignore[assignment]
+                )
+                raise PermissionDenied("A valid expert must be specified.")
+
+            conn_request = serializer.save(seeker=self.request.user)
+            seeker_id = getattr(user, "id", "unknown")
+            expert_id = getattr(getattr(conn_request, "expert", None), "id", "unknown")
+
+            logger.info(
+                "ConnectionRequest %s saved successfully for seeker %s → expert %s",
+                conn_request.id,
+                seeker_id,
+                expert_id,
             )
 
-        # Create the connection request
-        conn_request = ConnectionRequest.objects.create(
-            seeker=seeker, expert=expert, message=message
-        )
-
-        # Notify the expert via email
-        notify_expert_new_message(expert.email, seeker.get_full_name(), message)
-
-        serializer = ConnectionRequestDetailSerializer(conn_request)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            expert_email = conn_request.expert.email
+            seeker_name = user.get_full_name()
+            message = conn_request.message
+            notify_expert_new_message(expert_email, seeker_name, message)
+            logger.info(
+                "Connection request %s sent from user %s to expert %s %s",
+                conn_request.id,
+                seeker_name,
+                conn_request.expert.id,
+                expert_email,
+            )
+        except Exception as e:
+            seeker_id = getattr(getattr(self.request, "user", None), "id", "unknown")
+            logger.error(
+                "Failed to create connection request for user %s: %s", seeker_id, e
+            )
+            raise
