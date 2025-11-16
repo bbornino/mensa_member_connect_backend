@@ -121,6 +121,7 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = "__all__"
+        read_only_fields = ["id"]
 
     def get_local_group_name(self, obj):
         if obj.local_group:
