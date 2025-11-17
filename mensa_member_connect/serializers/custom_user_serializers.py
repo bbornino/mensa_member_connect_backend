@@ -116,11 +116,11 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
     )
 
     local_group_name = serializers.SerializerMethodField()
-    profile_photo = serializers.SerializerMethodField()
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = "__all__"
+        exclude = ["profile_photo"]
         read_only_fields = ["id"]
 
     def get_local_group_name(self, obj):
@@ -128,10 +128,11 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
             return obj.local_group.group_name  # no "- 94"
         return None
 
-    def get_profile_photo(self, obj):
-        if obj.profile_photo:
-            # If using BinaryField, base64 encode it
-            import base64
+    def get_photo(self, obj):
+        if not obj.profile_photo:
+            return None
 
-            return base64.b64encode(obj.profile_photo).decode("utf-8")
-        return None
+        photo_bytes = bytes(obj.profile_photo)
+        image_format = _detect_image_format(photo_bytes)
+        base64_data = base64.b64encode(photo_bytes).decode("utf-8")
+        return f"data:image/{image_format};base64,{base64_data}"
