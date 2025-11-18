@@ -1,5 +1,6 @@
 # mensa_member_connect/views/custom_user_views.py
 import logging
+import re
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -13,6 +14,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.db.models import Exists, OuterRef
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.expertise import Expertise
+from mensa_member_connect.models.local_group import LocalGroup
 from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
@@ -32,6 +34,13 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserDetailSerializer
     authentication_classes = [JWTAuthentication]
+
+    def get_queryset(self):
+        """
+        Optimize queries by using select_related for foreign key relationships.
+        This prevents N+1 queries when accessing local_group and industry.
+        """
+        return CustomUser.objects.select_related("local_group", "industry")
 
     def get_permissions(self):
         if self.action in ["list", "retrieve"]:
@@ -201,6 +210,11 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
         password = request.data.get("password")
+        member_id = request.data.get("member_id")
+        phone = request.data.get("phone")
+        city = request.data.get("city")
+        state = request.data.get("state")
+        local_group = request.data.get("local_group")
 
         logger.info(
             "[USER_REG] Attempting registration for username=%s, email=%s",
@@ -241,13 +255,92 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             )
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        new_user = CustomUser.objects.create_user(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            password=password,
-        )
+        # Prepare user creation data
+        user_data = {
+            "username": username,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "password": password,
+        }
+
+        # Add member_id if provided
+        if member_id:
+            try:
+                user_data["member_id"] = int(member_id)
+            except (ValueError, TypeError):
+                logger.warning(
+                    "[USER_REG] Invalid member_id format: %s for email=%s", member_id, email
+                )
+                return Response(
+                    {"error": "Member ID must be numeric."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Add phone if provided - normalize to E.164 format
+        # If phone is invalid, skip it (phone is optional)
+        if phone:
+            phone_value = str(phone).strip()
+            if phone_value:
+                # If not already in E.164 format, convert it
+                if not phone_value.startswith('+'):
+                    try:
+                        # Remove all non-numeric characters
+                        digits = re.sub(r'\D', '', phone_value)
+                        # Remove leading 1 if present (US country code)
+                        if len(digits) == 11 and digits.startswith('1'):
+                            digits = digits[1:]
+                        # If we have exactly 10 digits, convert to E.164 format
+                        if len(digits) == 10:
+                            user_data["phone"] = f'+1{digits}'
+                        # If invalid format, skip it (phone is optional)
+                    except Exception:
+                        # If conversion fails, skip it (phone is optional)
+                        pass
+                else:
+                    # Already in E.164 format
+                    user_data["phone"] = phone_value
+
+        # Add city if provided
+        if city:
+            user_data["city"] = city
+
+        # Add state if provided
+        if state:
+            user_data["state"] = state
+
+        # Handle local_group - can be ID (int) or name (string)
+        local_group_obj = None
+        if local_group:
+            try:
+                # Try as ID first
+                if isinstance(local_group, int) or (isinstance(local_group, str) and local_group.isdigit()):
+                    local_group_obj = LocalGroup.objects.get(id=int(local_group))
+                else:
+                    # Try as name
+                    local_group_obj = LocalGroup.objects.get(group_name=local_group)
+                user_data["local_group"] = local_group_obj
+            except LocalGroup.DoesNotExist:
+                logger.warning(
+                    "[USER_REG] Local group not found: %s for email=%s", local_group, email
+                )
+                return Response(
+                    {"error": f"Local group '{local_group}' not found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Exception as e:
+                logger.warning(
+                    "[USER_REG] Error looking up local group %s for email=%s: %s",
+                    local_group,
+                    email,
+                    e,
+                )
+                return Response(
+                    {"error": "Invalid local group."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        new_user = CustomUser.objects.create_user(**user_data)
 
         logger.info(
             "[USER_REG] Successfully created user: username=%s, email=%s",

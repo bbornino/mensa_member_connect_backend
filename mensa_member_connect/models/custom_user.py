@@ -13,7 +13,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=16, default="member")  # sensible default
     status = models.CharField(max_length=24, default="pending")  # sensible default
 
-    occupation = models.CharField(max_length=128, default="")
+    occupation = models.CharField(max_length=128, default="", blank=True)
     industry = models.ForeignKey(
         Industry,
         on_delete=models.CASCADE,

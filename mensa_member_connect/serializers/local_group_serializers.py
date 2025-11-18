@@ -13,7 +13,7 @@ class LocalGroupMiniSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LocalGroup
-        fields = ["group_name"]
+        fields = ["id", "group_name"]
 
 
 # Detail serializer (all fields)
