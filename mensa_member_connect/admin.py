@@ -12,7 +12,6 @@ from mensa_member_connect.models.local_group import LocalGroup
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "username",
         "first_name",
         "last_name",
         "email",
@@ -23,47 +22,45 @@ class CustomUserAdmin(admin.ModelAdmin):
 
 
 class AdminActionAdmin(admin.ModelAdmin):
-    list_display = ("id", "admin_username", "target_username", "action", "created_at")
+    list_display = ("id", "admin_email", "target_email", "action", "created_at")
 
-    def admin_username(self, obj):
-        return obj.admin.username
+    def admin_email(self, obj):
+        return obj.admin.email
 
-    admin_username.admin_order_field = "admin__username"  # allows column sorting
-    admin_username.short_description = "Admin User"
+    admin_email.admin_order_field = "admin__email"
+    admin_email.short_description = "Admin Email"
 
-    def target_username(self, obj):
-        return obj.target_user.username
+    def target_email(self, obj):
+        return obj.target_user.email
 
-    target_username.admin_order_field = "target_user__username"
-    target_username.short_description = "Target User"
+    target_email.admin_order_field = "target_user__email"
+    target_email.short_description = "Target Email"
 
 
 class ConnectionRequestAdmin(admin.ModelAdmin):
-    list_display = ("id", "seeker_username", "expert_username", "created_at")
+    list_display = ("id", "seeker_email", "expert_email", "created_at")
 
-    def seeker_username(self, obj):
-        return obj.seeker.username
+    def seeker_email(self, obj):
+        return obj.seeker.email
 
-    seeker_username.admin_order_field = "seeker__username"
-    seeker_username.short_description = "Seeker"
+    seeker_email.admin_order_field = "seeker__email"
+    seeker_email.short_description = "Seeker"
 
-    def expert_username(self, obj):
-        return obj.expert.user.username
+    def expert_email(self, obj):
+        return obj.expert.user.email
 
-    expert_username.admin_order_field = "expert__user__username"
-    expert_username.short_description = "Expert"
+    expert_email.admin_order_field = "expert__user__email"
+    expert_email.short_description = "Expert"
 
 
 class ExpertiseAdmin(admin.ModelAdmin):
-    list_display = ("id", "expert_username", "what_offering")
+    list_display = ("id", "expert_email", "what_offering")
 
-    def expert_username(self, obj):
-        if obj.expert and obj.expert.user:
-            return obj.expert.user.username
-        return "-"  # fallback if expert or user is missing
+    def expert_email(self, obj):
+        return getattr(getattr(obj.expert, "user", None), "email", "-")
 
-    expert_username.admin_order_field = "expert__user__username"
-    expert_username.short_description = "Expert"
+    expert_email.admin_order_field = "expert__user__username"
+    expert_email.short_description = "Expert"
 
 
 class IndustryAdmin(admin.ModelAdmin):

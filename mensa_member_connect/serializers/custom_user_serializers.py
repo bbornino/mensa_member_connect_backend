@@ -1,7 +1,6 @@
+# mensa_member_connect/serializers/custom_user_serializers.py
 import base64
 import re
-
-# mensa_member_connect/serializers/custom_user_serializers.py
 from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField as DRFPhoneNumberField
 
@@ -40,7 +39,6 @@ class CustomUserExpertSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             "id",
-            "username",
             "first_name",
             "last_name",
             "city",
@@ -86,7 +84,6 @@ class CustomUserListSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             "id",
-            "username",
             "email",
             "first_name",
             "last_name",
@@ -135,45 +132,45 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
         This ensures consistent phone number handling across all forms.
         """
         # Make data mutable if it's not already
-        if hasattr(data, '_mutable'):
+        if hasattr(data, "_mutable"):
             data._mutable = True
         elif not isinstance(data, dict):
             data = dict(data)
         else:
             data = data.copy()
-        
+
         # Get the phone value if present
-        phone_value = data.get('phone')
+        phone_value = data.get("phone")
         if phone_value and isinstance(phone_value, str):
             phone_value = phone_value.strip()
-            
+
             # If empty after stripping, remove it (phone is optional)
             if not phone_value:
-                data.pop('phone', None)
+                data.pop("phone", None)
             # If already in E.164 format (starts with +), use as-is
-            elif phone_value.startswith('+'):
+            elif phone_value.startswith("+"):
                 # Already in E.164 format, keep it
                 pass
             else:
                 try:
                     # Remove all non-numeric characters
-                    digits = re.sub(r'\D', '', phone_value)
-                    
+                    digits = re.sub(r"\D", "", phone_value)
+
                     # Remove leading 1 if present (US country code)
-                    if len(digits) == 11 and digits.startswith('1'):
+                    if len(digits) == 11 and digits.startswith("1"):
                         digits = digits[1:]
-                    
+
                     # If we have exactly 10 digits, convert to E.164 format
                     if len(digits) == 10:
-                        data['phone'] = f'+1{digits}'
+                        data["phone"] = f"+1{digits}"
                     else:
                         # Invalid phone number - since phone is optional, remove it
                         # This prevents validation errors for invalid phone numbers
-                        data.pop('phone', None)
+                        data.pop("phone", None)
                 except Exception:
                     # If conversion fails, remove phone since it's optional
-                    data.pop('phone', None)
-        
+                    data.pop("phone", None)
+
         return super().to_internal_value(data)
 
     def get_local_group_name(self, obj):
@@ -189,3 +186,7 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
         image_format = _detect_image_format(photo_bytes)
         base64_data = base64.b64encode(photo_bytes).decode("utf-8")
         return f"data:image/{image_format};base64,{base64_data}"
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()

@@ -126,3 +126,38 @@ def notify_expert_new_message(expert_email: str, seeker_name: str, message: str)
             seeker_name,
             e,
         )
+
+
+def send_password_reset_email(user_email: str, user_name: str, reset_link: str):
+    """
+    Sends a password reset email to the user with the given reset link.
+
+    Args:
+        user_email: The recipient's email address.
+        user_name: The recipient's full name.
+        reset_link: The URL for the password reset.
+    """
+    subject = "MENSA Password Reset Request"
+    message = (
+        f"Hello {user_name},\n\n"
+        "We received a request to reset your MENSA account password.\n"
+        f"You can reset your password by clicking the link below:\n{reset_link}\n\n"
+        "If you did not request a password reset, please ignore this email.\n\n"
+        "Best regards,\nThe MENSA Team"
+    )
+
+    logger.info("[EMAIL] Attempting to send password reset email to %s", user_email)
+
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user_email],
+            fail_silently=False,
+        )
+        logger.info("[EMAIL] Successfully sent password reset email to %s", user_email)
+    except Exception as e:
+        logger.error(
+            "[EMAIL] Failed to send password reset email to %s: %s", user_email, e
+        )
