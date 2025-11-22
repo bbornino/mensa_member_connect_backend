@@ -3,11 +3,15 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+from pathlib import Path
 import logging
 import os
 import requests
 
 logger = logging.getLogger(__name__)
+
+# Get the project root directory (parent of mensa_member_connect_backend)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def send_email_via_mailgun_api(
