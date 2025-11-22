@@ -225,6 +225,9 @@ def send_password_reset_email(user_email: str, user_name: str, reset_link: str, 
         msg.send(fail_silently=False)
         logger.info("[EMAIL] Successfully sent password reset email to %s", user_email)
     except Exception as e:
+        # Log the error but don't raise - let the calling function handle it
         logger.error(
             "[EMAIL] Failed to send password reset email to %s: %s", user_email, e
         )
+        # Re-raise so calling code knows email failed (but can still return success to user)
+        raise

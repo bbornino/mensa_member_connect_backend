@@ -243,7 +243,8 @@ EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("1", "true",
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ("1", "true", "yes")
 
 # Optional settings
-EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
+# Increase timeout for Railway/cloud environments where SMTP connections may be slower
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 30))
 
 # Frontend URL for password reset links
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
