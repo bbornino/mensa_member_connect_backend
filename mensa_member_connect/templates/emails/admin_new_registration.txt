@@ -1,6 +1,6 @@
 A new user has registered and is awaiting your approval.
 
-User Name: {% if first_name or last_name %}{{ first_name }} {{ last_name }}{% else %}{{ user_name }}{% endif %}
+Name: {% if first_name or last_name %}{{ first_name }} {{ last_name }}{% else %}{{ user_name }}{% endif %}
 Email: {{ user_email }}
 
 Please review and approve their account in the admin panel: https://namme.us/admin
