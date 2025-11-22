@@ -4,8 +4,87 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
 import logging
+import os
+import requests
 
 logger = logging.getLogger(__name__)
+
+
+def send_email_via_mailgun_api(
+    to_email: str,
+    subject: str,
+    text_content: str,
+    html_content: str = None,
+    from_email: str = None,
+    reply_to: str = None
+) -> bool:
+    """
+    Send email using Mailgun HTTP API (more reliable than SMTP in cloud environments).
+    
+    Returns True if successful, False otherwise.
+    """
+    # Get Mailgun API credentials from environment
+    mailgun_api_key = os.environ.get("MAILGUN_API_KEY")
+    mailgun_domain = os.environ.get("MAILGUN_DOMAIN") or os.environ.get("MAILGUN_SENDING_DOMAIN")
+    
+    if not mailgun_api_key or not mailgun_domain:
+        logger.warning(
+            "[EMAIL] Mailgun API credentials not configured. "
+            "Set MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables."
+        )
+        return False
+    
+    # Determine Mailgun API endpoint (US or EU)
+    mailgun_region = os.environ.get("MAILGUN_REGION", "us").lower()
+    if mailgun_region == "eu":
+        api_url = f"https://api.eu.mailgun.net/v3/{mailgun_domain}/messages"
+    else:
+        api_url = f"https://api.mailgun.net/v3/{mailgun_domain}/messages"
+    
+    # Use provided from_email or default
+    from_address = from_email or settings.DEFAULT_FROM_EMAIL
+    
+    # Prepare the request
+    # Note: Mailgun API expects "to" as a string, not a list
+    data = {
+        "from": from_address,
+        "to": to_email,
+        "subject": subject,
+        "text": text_content,
+    }
+    
+    if html_content:
+        data["html"] = html_content
+    
+    # Add reply-to header if provided
+    if reply_to:
+        data["h:Reply-To"] = reply_to
+    
+    try:
+        response = requests.post(
+            api_url,
+            auth=("api", mailgun_api_key),
+            data=data,
+            timeout=10  # HTTP API is much faster than SMTP
+        )
+        
+        if response.status_code == 200:
+            logger.info("[EMAIL] Successfully sent email via Mailgun API to %s", to_email)
+            return True
+        else:
+            logger.error(
+                "[EMAIL] Mailgun API error: Status %s, Response: %s",
+                response.status_code,
+                response.text
+            )
+            return False
+            
+    except requests.exceptions.Timeout:
+        logger.error("[EMAIL] Mailgun API request timed out")
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.error("[EMAIL] Mailgun API request failed: %s", e)
+        return False
 
 
 def notify_admin_new_registration(user_email, user_name, first_name=None, last_name=None):
@@ -29,6 +108,22 @@ def notify_admin_new_registration(user_email, user_name, first_name=None, last_n
         user_email,
     )
 
+    # Try Mailgun API first (more reliable), fall back to SMTP
+    use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+    
+    if use_mailgun_api:
+        success = send_email_via_mailgun_api(
+            to_email=settings.ADMIN_EMAIL,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL
+        )
+        if success:
+            return
+        logger.warning("[EMAIL] Mailgun API failed, falling back to SMTP")
+    
+    # Fallback to SMTP
     try:
         msg = EmailMultiAlternatives(
             subject,
@@ -68,6 +163,22 @@ def notify_user_registration(user_email, user_name, first_name=None, last_name=N
         "[EMAIL] Attempting to send registration confirmation to %s", user_email
     )
 
+    # Try Mailgun API first (more reliable), fall back to SMTP
+    use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+    
+    if use_mailgun_api:
+        success = send_email_via_mailgun_api(
+            to_email=user_email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL
+        )
+        if success:
+            return
+        logger.warning("[EMAIL] Mailgun API failed, falling back to SMTP")
+    
+    # Fallback to SMTP
     try:
         msg = EmailMultiAlternatives(
             subject,
@@ -103,6 +214,22 @@ def notify_user_approval(user_email, user_name, first_name=None, last_name=None)
 
     logger.info("[EMAIL] Attempting to send account approval email to %s", user_email)
 
+    # Try Mailgun API first (more reliable), fall back to SMTP
+    use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+    
+    if use_mailgun_api:
+        success = send_email_via_mailgun_api(
+            to_email=user_email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL
+        )
+        if success:
+            return
+        logger.warning("[EMAIL] Mailgun API failed, falling back to SMTP")
+    
+    # Fallback to SMTP
     try:
         msg = EmailMultiAlternatives(
             subject,
@@ -165,6 +292,23 @@ def notify_expert_new_message(
         seeker_name,
     )
 
+    # Try Mailgun API first (more reliable), fall back to SMTP
+    use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+    
+    if use_mailgun_api:
+        success = send_email_via_mailgun_api(
+            to_email=expert_email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            reply_to=seeker_email if seeker_email else None
+        )
+        if success:
+            return
+        logger.warning("[EMAIL] Mailgun API failed, falling back to SMTP")
+    
+    # Fallback to SMTP
     try:
         msg = EmailMultiAlternatives(
             subject=subject,
@@ -214,6 +358,23 @@ def send_password_reset_email(user_email: str, user_name: str, reset_link: str, 
 
     logger.info("[EMAIL] Attempting to send password reset email to %s", user_email)
 
+    # Try Mailgun API first (more reliable), fall back to SMTP
+    use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+    
+    if use_mailgun_api:
+        success = send_email_via_mailgun_api(
+            to_email=user_email,
+            subject=subject,
+            text_content=text_content,
+            html_content=html_content,
+            from_email=settings.DEFAULT_FROM_EMAIL
+        )
+        if success:
+            return
+        # If API fails, fall through to SMTP as backup
+        logger.warning("[EMAIL] Mailgun API failed, falling back to SMTP")
+    
+    # Fallback to SMTP
     try:
         msg = EmailMultiAlternatives(
             subject,
