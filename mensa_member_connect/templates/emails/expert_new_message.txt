@@ -1,0 +1,26 @@
+You have received a new connection request on NAMME.
+
+From: {% if seeker_first_name or seeker_last_name %}{{ seeker_first_name }} {{ seeker_last_name }}{% else %}{{ seeker_name }}{% endif %}
+
+{% if local_group_name %}
+Local Group: {{ local_group_name }}
+{% endif %}
+
+{% if seeker_email %}
+Email: {{ seeker_email }}
+{% endif %}
+
+{% if preferred_contact_method_display %}
+Preferred Contact Method: {{ preferred_contact_method_display }}
+{% endif %}
+
+Message:
+{{ message }}
+
+---
+
+You can respond by replying directly to this email. The reply will be sent to {{ seeker_email|default:"the sender" }}. Please note that NAMME does not facilitate the communications between members — all correspondence happens directly between you.
+
+---
+
+Report this message: https://namme.us/feedback

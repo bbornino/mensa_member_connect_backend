@@ -66,7 +66,18 @@ class ConnectionRequestViewSet(viewsets.ModelViewSet):
             expert_email = conn_request.expert.email
             seeker_name = user.get_full_name()
             message = conn_request.message
-            notify_expert_new_message(expert_email, seeker_name, message)
+            local_group_name = user.local_group.group_name if user.local_group else None
+            preferred_contact_method = conn_request.preferred_contact_method if hasattr(conn_request, 'preferred_contact_method') else None
+            notify_expert_new_message(
+                expert_email, 
+                seeker_name, 
+                message,
+                seeker_first_name=user.first_name,
+                seeker_last_name=user.last_name,
+                seeker_email=user.email,
+                local_group_name=local_group_name,
+                preferred_contact_method=preferred_contact_method
+            )
             logger.info(
                 "Connection request %s sent from user %s to expert %s %s",
                 conn_request.id,

@@ -3,6 +3,9 @@ SECRET_KEY=your-secret-key-here
 DEBUG=True
 LOG_LEVEL=DEBUG
 
+# Frontend URL (for password reset links)
+FRONTEND_URL=http://localhost:3000
+
 # Database Settings (using existing Supabase connection)
 DB_NAME=postgres
 DB_USER=postgres.xbqekpsyfldqajcefsjv

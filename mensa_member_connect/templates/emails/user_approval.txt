@@ -1,0 +1,9 @@
+Hi {% if first_name or last_name %}{{ first_name }} {{ last_name }}{% else %}{{ user_name }}{% endif %},
+
+Your account has been approved by the NAMME admin. You can now log in and start connecting with other members!
+
+Welcome aboard!
+
+– The NAMME Team
+
+Visit us at: https://namme.us/login

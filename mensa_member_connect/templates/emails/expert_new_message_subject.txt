@@ -1,0 +1,2 @@
+New Connection Request from {{ seeker_name }} on NAMME
+

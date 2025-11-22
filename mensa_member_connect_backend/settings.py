@@ -244,6 +244,9 @@ EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ("1", "true"
 
 # Optional settings
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
+
+# Frontend URL for password reset links
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 EMAIL_SUBJECT_PREFIX = os.environ.get("EMAIL_SUBJECT_PREFIX", "[MENSA] ")
 
 # Admin and Manager notifications

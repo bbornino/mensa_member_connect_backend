@@ -1,18 +1,28 @@
 # mensa_member_connect/utils/email_utils.py
 
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def notify_admin_new_registration(user_email, user_name):
+def notify_admin_new_registration(user_email, user_name, first_name=None, last_name=None):
     """
     Notify admin that a new user registered and is awaiting approval.
     """
-    subject = f"New MENSA Registration Awaiting Approval: {user_name}"
-    message = f"A new user has registered with email: {user_email}.\nPlease review and approve."
+    context = {
+        'user_email': user_email,
+        'user_name': user_name,
+        'first_name': first_name or '',
+        'last_name': last_name or '',
+    }
+    
+    subject = render_to_string('emails/admin_new_registration_subject.txt', context).strip()
+    text_content = render_to_string('emails/admin_new_registration.txt', context)
+    html_content = render_to_string('emails/admin_new_registration.html', context)
+    
     logger.info(
         "[EMAIL] Attempting to notify admin (%s) about new user: %s",
         settings.ADMIN_EMAIL,
@@ -20,13 +30,14 @@ def notify_admin_new_registration(user_email, user_name):
     )
 
     try:
-        send_mail(
+        msg = EmailMultiAlternatives(
             subject,
-            message,
+            text_content,
             settings.DEFAULT_FROM_EMAIL,
             [settings.ADMIN_EMAIL],  # set ADMIN_EMAIL in settings.py
-            fail_silently=False,
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
         logger.info(
             "[EMAIL] Successfully sent notification to %s",
             settings.ADMIN_EMAIL,
@@ -38,30 +49,34 @@ def notify_admin_new_registration(user_email, user_name):
         )
 
 
-def notify_user_registration(user_email, user_name):
+def notify_user_registration(user_email, user_name, first_name=None, last_name=None):
     """
     Notify the new user that their registration was received and is awaiting approval.
     """
-    subject = "MENSA Registration Received"
-    message = (
-        f"Hello {user_name},\n\n"
-        "Thank you for registering with MENSA. Your account is awaiting approval by our team. "
-        "You will be notified once it is active.\n\n"
-        "Best regards,\nThe MENSA Team"
-    )
+    context = {
+        'user_email': user_email,
+        'user_name': user_name,
+        'first_name': first_name or '',
+        'last_name': last_name or '',
+    }
+    
+    subject = render_to_string('emails/user_registration_subject.txt', context).strip()
+    text_content = render_to_string('emails/user_registration.txt', context)
+    html_content = render_to_string('emails/user_registration.html', context)
 
     logger.info(
         "[EMAIL] Attempting to send registration confirmation to %s", user_email
     )
 
     try:
-        send_mail(
+        msg = EmailMultiAlternatives(
             subject,
-            message,
+            text_content,
             settings.DEFAULT_FROM_EMAIL,
             [user_email],
-            fail_silently=False,
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
         logger.info(
             "[EMAIL] Successfully sent registration confirmation to %s", user_email
         )
@@ -71,23 +86,32 @@ def notify_user_registration(user_email, user_name):
         )
 
 
-def notify_user_approval(user_email, user_name):
+def notify_user_approval(user_email, user_name, first_name=None, last_name=None):
     """
     Send an email to a user notifying them that their account has been approved.
     """
-    subject = "Your MENSA account has been approved!"
-    message = f"Hi {user_name},\n\nYour account has been approved by the MENSA admin. You can now log in and start connecting with others.\n\nWelcome aboard!\n\n– MENSA Team"
+    context = {
+        'user_email': user_email,
+        'user_name': user_name,
+        'first_name': first_name or '',
+        'last_name': last_name or '',
+    }
+    
+    subject = render_to_string('emails/user_approval_subject.txt', context).strip()
+    text_content = render_to_string('emails/user_approval.txt', context)
+    html_content = render_to_string('emails/user_approval.html', context)
 
     logger.info("[EMAIL] Attempting to send account approval email to %s", user_email)
 
     try:
-        send_mail(
+        msg = EmailMultiAlternatives(
             subject,
-            message,
+            text_content,
             settings.DEFAULT_FROM_EMAIL,
             [user_email],
-            fail_silently=False,
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
         logger.info(
             "[EMAIL] Successfully sent account approval email to %s", user_email
         )
@@ -97,9 +121,44 @@ def notify_user_approval(user_email, user_name):
         )
 
 
-def notify_expert_new_message(expert_email: str, seeker_name: str, message: str):
-    subject = f"New Connection Request from {seeker_name}"
-    body = f"You have received a new connection request:\n\nFrom: {seeker_name}\nMessage: {message}"
+def notify_expert_new_message(
+    expert_email: str, 
+    seeker_name: str, 
+    message: str, 
+    seeker_first_name=None, 
+    seeker_last_name=None,
+    seeker_email=None,
+    local_group_name=None,
+    preferred_contact_method=None
+):
+    # Format preferred contact method for display
+    contact_method_display = ''
+    if preferred_contact_method:
+        contact_method_map = {
+            'email': 'Email',
+            'phone': 'Phone call',
+            'video_call': 'Video call (Zoom, etc.)',
+            'in_person': 'In-person meeting',
+            'other': 'Other (specify in message)'
+        }
+        contact_method_display = contact_method_map.get(preferred_contact_method, preferred_contact_method)
+    
+    context = {
+        'expert_email': expert_email,
+        'seeker_name': seeker_name,
+        'seeker_first_name': seeker_first_name or '',
+        'seeker_last_name': seeker_last_name or '',
+        'seeker_email': seeker_email or '',
+        'local_group_name': local_group_name or '',
+        'preferred_contact_method': preferred_contact_method or '',
+        'preferred_contact_method_display': contact_method_display,
+        'message': message,
+    }
+    
+    subject = render_to_string('emails/expert_new_message_subject.txt', context).strip()
+    text_content = render_to_string('emails/expert_new_message.txt', context)
+    html_content = render_to_string('emails/expert_new_message.html', context)
+    
     logger.info(
         "[EMAIL] Attempting to send new connection request email to %s from %s",
         expert_email,
@@ -107,13 +166,15 @@ def notify_expert_new_message(expert_email: str, seeker_name: str, message: str)
     )
 
     try:
-        send_mail(
+        msg = EmailMultiAlternatives(
             subject=subject,
-            message=body,
+            body=text_content,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[expert_email],
-            fail_silently=False,
+            to=[expert_email],
+            reply_to=[seeker_email] if seeker_email else [],
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
         logger.info(
             "[EMAIL] Successfully sent new connection request email to %s from %s",
             expert_email,
@@ -128,7 +189,7 @@ def notify_expert_new_message(expert_email: str, seeker_name: str, message: str)
         )
 
 
-def send_password_reset_email(user_email: str, user_name: str, reset_link: str):
+def send_password_reset_email(user_email: str, user_name: str, reset_link: str, first_name=None, last_name=None):
     """
     Sends a password reset email to the user with the given reset link.
 
@@ -136,26 +197,32 @@ def send_password_reset_email(user_email: str, user_name: str, reset_link: str):
         user_email: The recipient's email address.
         user_name: The recipient's full name.
         reset_link: The URL for the password reset.
+        first_name: The recipient's first name (optional).
+        last_name: The recipient's last name (optional).
     """
-    subject = "MENSA Password Reset Request"
-    message = (
-        f"Hello {user_name},\n\n"
-        "We received a request to reset your MENSA account password.\n"
-        f"You can reset your password by clicking the link below:\n{reset_link}\n\n"
-        "If you did not request a password reset, please ignore this email.\n\n"
-        "Best regards,\nThe MENSA Team"
-    )
+    context = {
+        'user_email': user_email,
+        'user_name': user_name,
+        'first_name': first_name or '',
+        'last_name': last_name or '',
+        'reset_link': reset_link,
+    }
+    
+    subject = render_to_string('emails/password_reset_subject.txt', context).strip()
+    text_content = render_to_string('emails/password_reset.txt', context)
+    html_content = render_to_string('emails/password_reset.html', context)
 
     logger.info("[EMAIL] Attempting to send password reset email to %s", user_email)
 
     try:
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            fail_silently=False,
+        msg = EmailMultiAlternatives(
+            subject,
+            text_content,
+            settings.DEFAULT_FROM_EMAIL,
+            [user_email],
         )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send(fail_silently=False)
         logger.info("[EMAIL] Successfully sent password reset email to %s", user_email)
     except Exception as e:
         logger.error(

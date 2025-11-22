@@ -56,13 +56,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
-        # @action(detail=False, methods=["patch"], url_path="update")
-        if "username" in request.data:
-            return Response(
-                {"error": "Username cannot be changed."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         user = self.request.user  # the requesting user (admin or self)
         target_user = self.get_object()  # the user being updated
 
@@ -79,9 +72,6 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         )
 
         if serializer.is_valid():
-            new_email = request.data.get("email")
-            if new_email:
-                target_user.username = new_email.lower().strip()
 
             serializer.save()
             print("After save:", target_user.status)
@@ -100,7 +90,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             if old_status != "active" and target_user.status == "active":
 
                 try:
-                    notify_user_approval(target_user.email, target_user.get_full_name())
+                    notify_user_approval(
+                        target_user.email, 
+                        target_user.get_full_name(),
+                        first_name=target_user.first_name,
+                        last_name=target_user.last_name
+                    )
                     logger.info(
                         "[EMAIL] Sent approval notification to user: %s with email: %s",
                         user.get_full_name() or f"{user.first_name} {user.last_name}",
@@ -178,6 +173,179 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=["post"], url_path="register")
+    def register_user(self, request):
+        email = request.data.get("email")
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
+        password = request.data.get("password")
+        member_id = request.data.get("member_id")
+        phone = request.data.get("phone")
+        city = request.data.get("city")
+        state = request.data.get("state")
+        local_group = request.data.get("local_group")
+
+        logger.info(
+            "[USER_REG] Attempting registration for email=%s",
+            email,
+        )
+
+        if not all([email, first_name, last_name, password]):
+            logger.warning(
+                "[USER_REG] Registration failed: missing fields for email=%s", email
+            )
+            return Response(
+                {"error": "Email, first name, last name, and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if CustomUser.objects.filter(email=email).exists():
+            logger.warning(
+                "[USER_REG] Registration failed: email already exists: %s", email
+            )
+            return Response(
+                {"error": "Email already exists."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            validate_password(password)
+        except Exception as e:  # TODO: narrow this exception later
+            logger.warning(
+                "[USER_REG] Registration failed: password validation failed for email=%s: %s",
+                email,
+                e,
+            )
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Prepare user creation data
+        user_data = {
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "password": password,
+        }
+
+        # Add member_id if provided
+        if member_id:
+            try:
+                user_data["member_id"] = int(member_id)
+            except (ValueError, TypeError):
+                logger.warning(
+                    "[USER_REG] Invalid member_id format: %s for email=%s", member_id, email
+                )
+                return Response(
+                    {"error": "Member ID must be numeric."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        # Add phone if provided - normalize to E.164 format
+        # If phone is invalid, skip it (phone is optional)
+        if phone:
+            phone_value = str(phone).strip()
+            if phone_value:
+                # If not already in E.164 format, convert it
+                if not phone_value.startswith('+'):
+                    try:
+                        # Remove all non-numeric characters
+                        digits = re.sub(r'\D', '', phone_value)
+                        # Remove leading 1 if present (US country code)
+                        if len(digits) == 11 and digits.startswith('1'):
+                            digits = digits[1:]
+                        # If we have exactly 10 digits, convert to E.164 format
+                        if len(digits) == 10:
+                            user_data["phone"] = f'+1{digits}'
+                        # If invalid format, skip it (phone is optional)
+                    except Exception:
+                        # If conversion fails, skip it (phone is optional)
+                        pass
+                else:
+                    # Already in E.164 format
+                    user_data["phone"] = phone_value
+
+        # Add city if provided
+        if city:
+            user_data["city"] = city
+
+        # Add state if provided
+        if state:
+            user_data["state"] = state
+
+        # Handle local_group - can be ID (int) or name (string)
+        local_group_obj = None
+        if local_group:
+            try:
+                # Try as ID first
+                if isinstance(local_group, int) or (isinstance(local_group, str) and local_group.isdigit()):
+                    local_group_obj = LocalGroup.objects.get(id=int(local_group))
+                else:
+                    # Try as name
+                    local_group_obj = LocalGroup.objects.get(group_name=local_group)
+                user_data["local_group"] = local_group_obj
+            except LocalGroup.DoesNotExist:
+                logger.warning(
+                    "[USER_REG] Local group not found: %s for email=%s", local_group, email
+                )
+                return Response(
+                    {"error": f"Local group '{local_group}' not found."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except Exception as e:
+                logger.warning(
+                    "[USER_REG] Error looking up local group %s for email=%s: %s",
+                    local_group,
+                    email,
+                    e,
+                )
+                return Response(
+                    {"error": "Invalid local group."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        new_user = CustomUser.objects.create_user(**user_data)
+
+        logger.info(
+            "[USER_REG] Successfully created user: email=%s",
+            email,
+        )
+
+        # Notify admin and user
+        try:
+            notify_user_registration(
+                new_user.email, 
+                new_user.get_full_name(),
+                first_name=new_user.first_name,
+                last_name=new_user.last_name
+            )
+            logger.info(
+                "[EMAIL] Sent registration confirmation to user: %s", new_user.email
+            )
+        except Exception as e:
+            logger.error(
+                "[EMAIL] Failed to send registration confirmation to user %s: %s",
+                new_user.email,
+                e,
+            )
+
+        try:
+            notify_admin_new_registration(
+                new_user.email, 
+                new_user.get_full_name(),
+                first_name=new_user.first_name,
+                last_name=new_user.last_name
+            )
+            logger.info(
+                "[EMAIL] Sent new registration notification to admin for user: %s",
+                new_user.email,
+            )
+        except Exception as e:
+            logger.error(
+                "[EMAIL] Failed to notify admin about new user %s: %s",
+                new_user.email,
+                e,
+            )
+
+        return Response(
+            {"message": "User successfully registered."}, status=status.HTTP_201_CREATED
+        )
 
     @action(
         detail=False, methods=["get"], url_path="all", permission_classes=[IsAdminUser]

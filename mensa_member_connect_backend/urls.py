@@ -8,6 +8,7 @@ from mensa_member_connect.views.custom_user_views import CustomUserViewSet
 from mensa_member_connect.views.custom_user_auth_views import (
     AuthenticateUserView,
     PasswordResetRequestView,
+    PasswordResetConfirmView,
     LogoutUserView,
     TokenRefreshCustomView,
 )
@@ -50,6 +51,11 @@ urlpatterns = [
         "api/users/password-reset-request/",
         PasswordResetRequestView.as_view(),
         name="user-password-reset-request",
+    ),
+    path(
+        "api/users/password-reset-confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="user-password-reset-confirm",
     ),
     path(
         "api/users/register/",

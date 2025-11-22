@@ -190,3 +190,26 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True, help_text="Password reset token from email")
+    new_password = serializers.CharField(
+        required=True,
+        min_length=8,
+        write_only=True,
+        help_text="New password (minimum 8 characters)"
+    )
+    confirm_password = serializers.CharField(
+        required=True,
+        write_only=True,
+        help_text="Confirm new password"
+    )
+
+    def validate(self, data):
+        """Validate that passwords match"""
+        if data.get('new_password') != data.get('confirm_password'):
+            raise serializers.ValidationError({
+                "confirm_password": "Passwords do not match."
+            })
+        return data

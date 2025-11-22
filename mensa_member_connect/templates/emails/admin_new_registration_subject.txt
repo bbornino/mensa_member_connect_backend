@@ -1,0 +1,2 @@
+New NAMME Registration Awaiting Approval: {% if first_name or last_name %}{{ first_name }} {{ last_name }}{% else %}{{ user_name }}{% endif %}
+

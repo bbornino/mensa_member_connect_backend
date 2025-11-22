@@ -1,0 +1,10 @@
+Hello {% if first_name or last_name %}{{ first_name }} {{ last_name }}{% else %}{{ user_name }}{% endif %},
+
+Thank you for registering with the Network of American Mensa Member Experts. Your account is awaiting approval by our team. You will be notified once it is active.
+
+While You Wait:
+Please note that you won't have access to the Experts directory until your account is approved. However, you can update your profile now if you wish to offer your expertise to other members once you're approved. Visit: https://namme.us/profile
+
+Best regards,
+The NAMME Team
+
