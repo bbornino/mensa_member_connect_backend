@@ -76,6 +76,24 @@ class CustomUserMiniSerializer(serializers.ModelSerializer):
         fields = ["name"]
 
 
+class CustomUserSummarySerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source="get_full_name", read_only=True)
+    local_group = LocalGroupMiniSerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "full_name",
+            "email",
+            "city",
+            "state",
+            "local_group",
+        ]
+
+
 class CustomUserListSerializer(serializers.ModelSerializer):
     local_group = LocalGroupMiniSerializer(read_only=True)
     is_expert = serializers.BooleanField(read_only=True)
@@ -193,23 +211,23 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    token = serializers.CharField(required=True, help_text="Password reset token from email")
+    token = serializers.CharField(
+        required=True, help_text="Password reset token from email"
+    )
     new_password = serializers.CharField(
         required=True,
         min_length=8,
         write_only=True,
-        help_text="New password (minimum 8 characters)"
+        help_text="New password (minimum 8 characters)",
     )
     confirm_password = serializers.CharField(
-        required=True,
-        write_only=True,
-        help_text="Confirm new password"
+        required=True, write_only=True, help_text="Confirm new password"
     )
 
     def validate(self, data):
         """Validate that passwords match"""
-        if data.get('new_password') != data.get('confirm_password'):
-            raise serializers.ValidationError({
-                "confirm_password": "Passwords do not match."
-            })
+        if data.get("new_password") != data.get("confirm_password"):
+            raise serializers.ValidationError(
+                {"confirm_password": "Passwords do not match."}
+            )
         return data

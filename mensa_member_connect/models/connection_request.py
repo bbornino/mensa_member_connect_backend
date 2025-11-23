@@ -1,3 +1,4 @@
+# mensa_member_connect/models/connection_request.py
 from django.conf import settings
 from django.db import models
 
@@ -20,6 +21,6 @@ class ConnectionRequest(models.Model):
         max_length=50,
         blank=True,
         null=True,
-        help_text="Preferred contact method: email, phone, video_call, in_person, other"
+        help_text="Preferred contact method: email, phone, video_call, in_person, other",
     )
     created_at = models.DateTimeField(auto_now_add=True)
