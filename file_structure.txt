@@ -13,8 +13,7 @@ mensa_member_connect/
 │   │   │   ├── admin_action.py 
 │   │   ├── views/
 │   │   │   ├── custom_user_views.py 
-│   │   │   ├── dashboard_views.py 
-│   │   │   ├── expert_views.py 
+│   │   │   ├── stats_views.py 
 │   │   │   ├── expertise_views.py 
 │   │   │   ├── local_group_views.py 
 │   │   │   ├── connection_views.py 
@@ -22,7 +21,6 @@ mensa_member_connect/
 │   │   ├── serializers/
 │   │   │   ├── custom_user_serializer.py 
 │   │   │   ├── dashboard_serializer.py 
-│   │   │   ├── expert_serializer.py 
 │   │   │   ├── expertise_serializer.py 
 │   │   │   ├── local_group_serializer.py 
 │   │   │   ├── connection_serializer.py 
@@ -30,7 +28,8 @@ mensa_member_connect/
 │   │   ├── utils/
 │   │   │   ├── email_utils.py 
 │   │   ├── validators/
-│   │   │   ├── custom_user_validators.py │   │   ├── migrations/
+│   │   │   ├── custom_user_validators.py 
+│   │   ├── migrations/
 │   │   ├── __init__.py
 │   │   ├── admin.py
 │   │   ├── apps.py

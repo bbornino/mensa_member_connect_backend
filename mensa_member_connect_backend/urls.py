@@ -20,6 +20,7 @@ from mensa_member_connect.views.connection_request_views import ConnectionReques
 from mensa_member_connect.views.industry_views import IndustryViewSet
 from mensa_member_connect.views.local_group_views import LocalGroupViewSet
 from mensa_member_connect.views.admin_action_views import AdminActionViewSet
+from mensa_member_connect.views import stats_views
 
 
 class NoAuth(BaseAuthentication):
@@ -63,5 +64,6 @@ urlpatterns = [
         name="user-register",
     ),
     path("api/users/logout/", LogoutUserView.as_view(), name="user-logout"),
+    path("api/stats/", stats_views.stats, name="stats"),
     path("api/", include(router.urls)),
 ]
