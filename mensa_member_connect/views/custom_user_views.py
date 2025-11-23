@@ -91,10 +91,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
                 try:
                     notify_user_approval(
-                        target_user.email, 
+                        target_user.email,
                         target_user.get_full_name(),
                         first_name=target_user.first_name,
-                        last_name=target_user.last_name
+                        last_name=target_user.last_name,
                     )
                     logger.info(
                         "[EMAIL] Sent approval notification to user: %s with email: %s",
@@ -230,7 +230,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 user_data["member_id"] = int(member_id)
             except (ValueError, TypeError):
                 logger.warning(
-                    "[USER_REG] Invalid member_id format: %s for email=%s", member_id, email
+                    "[USER_REG] Invalid member_id format: %s for email=%s",
+                    member_id,
+                    email,
                 )
                 return Response(
                     {"error": "Member ID must be numeric."},
@@ -243,16 +245,16 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             phone_value = str(phone).strip()
             if phone_value:
                 # If not already in E.164 format, convert it
-                if not phone_value.startswith('+'):
+                if not phone_value.startswith("+"):
                     try:
                         # Remove all non-numeric characters
-                        digits = re.sub(r'\D', '', phone_value)
+                        digits = re.sub(r"\D", "", phone_value)
                         # Remove leading 1 if present (US country code)
-                        if len(digits) == 11 and digits.startswith('1'):
+                        if len(digits) == 11 and digits.startswith("1"):
                             digits = digits[1:]
                         # If we have exactly 10 digits, convert to E.164 format
                         if len(digits) == 10:
-                            user_data["phone"] = f'+1{digits}'
+                            user_data["phone"] = f"+1{digits}"
                         # If invalid format, skip it (phone is optional)
                     except Exception:
                         # If conversion fails, skip it (phone is optional)
@@ -274,7 +276,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         if local_group:
             try:
                 # Try as ID first
-                if isinstance(local_group, int) or (isinstance(local_group, str) and local_group.isdigit()):
+                if isinstance(local_group, int) or (
+                    isinstance(local_group, str) and local_group.isdigit()
+                ):
                     local_group_obj = LocalGroup.objects.get(id=int(local_group))
                 else:
                     # Try as name
@@ -282,7 +286,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 user_data["local_group"] = local_group_obj
             except LocalGroup.DoesNotExist:
                 logger.warning(
-                    "[USER_REG] Local group not found: %s for email=%s", local_group, email
+                    "[USER_REG] Local group not found: %s for email=%s",
+                    local_group,
+                    email,
                 )
                 return Response(
                     {"error": f"Local group '{local_group}' not found."},
@@ -310,10 +316,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         # Notify admin and user
         try:
             notify_user_registration(
-                new_user.email, 
+                new_user.email,
                 new_user.get_full_name(),
                 first_name=new_user.first_name,
-                last_name=new_user.last_name
+                last_name=new_user.last_name,
             )
             logger.info(
                 "[EMAIL] Sent registration confirmation to user: %s", new_user.email
@@ -327,10 +333,10 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
         try:
             notify_admin_new_registration(
-                new_user.email, 
+                new_user.email,
                 new_user.get_full_name(),
                 first_name=new_user.first_name,
-                last_name=new_user.last_name
+                last_name=new_user.last_name,
             )
             logger.info(
                 "[EMAIL] Sent new registration notification to admin for user: %s",
@@ -361,6 +367,21 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         logger.info("[LIST_USERS] Returning %d users", users.count())
         return Response(serializer.data)
 
+    def list_experts_raw(self):
+        """
+        Returns all users who are 'experts'.
+        Defined as having at least one expertise record.
+        Returns the queryset of users who are experts.
+        Centralizes the logic for 'who is an expert'.
+        """
+        qs = (
+            CustomUser.objects.filter(expertises__isnull=False)
+            .distinct()
+            .select_related("industry", "local_group")
+            .prefetch_related("expertises__area_of_expertise")
+        )
+        return qs
+
     @action(
         detail=False,
         methods=["get"],
@@ -369,15 +390,9 @@ class CustomUserViewSet(viewsets.ModelViewSet):
     )
     def list_experts(self, request):
         """
-        Returns all users who are 'experts'.
-        Defined as having at least one expertise record.
+        Returns all users who are 'experts' to REST endpoint.
         """
-        experts = (
-            CustomUser.objects.filter(expertises__isnull=False)
-            .distinct()
-            .select_related("industry", "local_group")
-            .prefetch_related("expertises__area_of_expertise")
-        )
+        experts = self.list_experts_raw()
         serializer = CustomUserExpertSerializer(experts, many=True)
         logger.info("[LIST_EXPERTS] Returning %d experts", experts.count())
         return Response(serializer.data)
