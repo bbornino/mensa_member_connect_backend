@@ -12,6 +12,8 @@ from django.db.models import Exists, OuterRef
 from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.models.expertise import Expertise
 from mensa_member_connect.models.local_group import LocalGroup
+from mensa_member_connect.models.admin_action import AdminAction
+
 from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
@@ -66,6 +68,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         )
 
         old_status = target_user.status
+        old_role = target_user.role
 
         serializer = CustomUserDetailSerializer(
             target_user, data=request.data, partial=True
@@ -76,6 +79,20 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             serializer.save()
             print("After save:", target_user.status)
 
+            # --- AdminAction Logging ---
+            if old_status != target_user.status:
+                action_message = (
+                    f"Admin {user.get_full_name()} changed the status of user "
+                    f"{target_user.id} - {target_user.get_full_name()} "
+                    f"from '{old_status}' to '{target_user.status}'."
+                )
+                AdminAction.objects.create(
+                    admin=user,
+                    target_user=target_user,
+                    action=action_message,
+                )
+                logger.info("[ADMIN_ACTION] %s", action_message)
+
             logger.info(
                 "[USER_UPDATE] Successfully updated user ID=%s by user %s. Status was: %s. Status is now: %s",
                 target_user.id,
@@ -83,6 +100,21 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 old_status,
                 target_user.status,
             )
+
+            if old_role != target_user.role:
+                role_change_message = (
+                    f"Admin {user.get_full_name()} changed the role of user "
+                    f"{target_user.id} - {target_user.get_full_name()} "
+                    f"from '{old_role}' to '{target_user.role}'."
+                )
+
+                AdminAction.objects.create(
+                    admin=user,
+                    target_user=target_user,
+                    action=role_change_message,
+                )
+
+                logger.info("[ADMIN_ACTION] %s", role_change_message)
 
             target_user.refresh_from_db()
 
