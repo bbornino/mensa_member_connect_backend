@@ -13,7 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from datetime import timedelta
-from logging.handlers import TimedRotatingFileHandler
+
+# from logging.handlers import TimedRotatingFileHandler
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -161,23 +162,23 @@ else:
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-#     },
-#     {
-#         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-#     },
-#     {
-#         "NAME": "mensa_member_connect.validators.custom_user_validators.StrongPasswordValidator"
-#     },
-# ]
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+    {
+        "NAME": "mensa_member_connect.validators.custom_user_validators.StrongPasswordValidator"
+    },
+]
 
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
