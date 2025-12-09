@@ -47,7 +47,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated()]
         if self.action == "list_all_users":
             return [IsAdminRole()]
-        if self.action in ["authenticate_user", "register_user", "list_experts"]:
+        if self.action in ["authenticate_user", "register_user"]:
             return []  # public endpoints, no auth required
         return [IsAuthenticated()]
 
@@ -418,11 +418,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["get"],
         url_path="experts",
-        permission_classes=[],  # Make it public
+        permission_classes=[IsAuthenticated],  # Requires authentication
     )
     def list_experts(self, request):
         """
         Returns all users who are 'experts' to REST endpoint.
+        Requires authentication to view experts.
         """
         experts = self.list_experts_raw()
         serializer = CustomUserExpertSerializer(experts, many=True)

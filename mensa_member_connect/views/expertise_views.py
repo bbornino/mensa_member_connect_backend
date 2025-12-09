@@ -19,7 +19,8 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action in ["list"]:
+        action = getattr(self, 'action', None)
+        if action in ["list"]:
             return ExpertiseListSerializer
         return ExpertiseDetailSerializer
 
@@ -27,6 +28,7 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
     def by_user(self, request, user_id=None):
         """
         Return all expertise records belonging to a given user.
+        Requires authentication to view expert profiles.
         """
         queryset = Expertise.objects.filter(user_id=user_id)
         serializer = self.get_serializer(queryset, many=True)
