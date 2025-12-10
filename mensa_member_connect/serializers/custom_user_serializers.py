@@ -51,6 +51,7 @@ class CustomUserExpertSerializer(serializers.ModelSerializer):
             "local_group",
             "expertise",
             "photo",
+            "status",
         ]
 
     def get_expertise(self, obj):

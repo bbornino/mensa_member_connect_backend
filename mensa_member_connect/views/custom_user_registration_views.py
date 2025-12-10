@@ -4,6 +4,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.tokens import RefreshToken
 from mensa_member_connect.models.custom_user import CustomUser
 
 from mensa_member_connect.utils.email_utils import (
@@ -11,6 +12,7 @@ from mensa_member_connect.utils.email_utils import (
     notify_user_registration,
 )
 from mensa_member_connect.views.custom_user_utils import validate_phone, get_local_group
+from mensa_member_connect.serializers.custom_user_serializers import CustomUserDetailSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +146,20 @@ class CustomUserRegistrationViewSet(viewsets.ViewSet):
                 e,
             )
 
+        # Generate JWT tokens for auto-login
+        refresh = RefreshToken.for_user(new_user)
+        
+        # Serialize user data
+        user_data = CustomUserDetailSerializer(new_user).data
+        
+        logger.info("[USER_REG] Returning tokens for auto-login: email=%s", email)
+        
         return Response(
-            {"message": "User successfully registered."}, status=status.HTTP_201_CREATED
+            {
+                "message": "User successfully registered.",
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": user_data,
+            },
+            status=status.HTTP_201_CREATED
         )
