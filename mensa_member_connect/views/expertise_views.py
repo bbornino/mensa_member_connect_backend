@@ -51,10 +51,12 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
         Used on the homepage to tease the variety of available expertise.
         """
         try:
-            # IMPORTANT: keep this endpoint constant-memory.
-            # The homepage calls it anonymously; loading "all expertises" into a Python list
-            # can OOM a small production container and look like "backend crash on homepage".
-            qs = (
+            # IMPORTANT: keep this endpoint cheap and bounded.
+            # - `list(EntireQuerySet)` OOMs small containers (homepage traffic).
+            # - `order_by("?")` is ORDER BY RANDOM() on Postgres: full-table scan + sort on large
+            #   tables — workers time out or the DB pegs; Railway often surfaces that as HTTP 500
+            #   with an empty body.
+            pool = list(
                 Expertise.objects.filter(
                     what_offering__isnull=False,
                     area_of_expertise__isnull=False,
@@ -62,15 +64,17 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
                 )
                 .exclude(what_offering="")
                 .select_related("area_of_expertise")
-                .order_by("?")[:18]
+                .order_by("-id")[:200]
             )
+            k = min(18, len(pool))
+            sampled = random.sample(pool, k) if k else []
 
             data = [
                 {
                     "industry": (e.area_of_expertise.industry_name if e.area_of_expertise else ""),
                     "what_offering": (e.what_offering or ""),
                 }
-                for e in qs
+                for e in sampled
             ]
             return Response(data)
         except Exception:
