@@ -1,4 +1,5 @@
 # mensa_member_connect/views/expertise_views.py
+import logging
 import random
 
 from rest_framework import viewsets
@@ -14,6 +15,7 @@ from mensa_member_connect.serializers.expertise_serializers import (
     ExpertiseDetailSerializer,
 )
 
+logger = logging.getLogger(__name__)
 
 class ExpertiseViewSet(viewsets.ModelViewSet):
     queryset = Expertise.objects.all()
@@ -48,22 +50,30 @@ class ExpertiseViewSet(viewsets.ModelViewSet):
         Return a public sample of expertise records with no PII.
         Used on the homepage to tease the variety of available expertise.
         """
-        pool = list(
-            Expertise.objects.filter(
-                what_offering__isnull=False,
-                area_of_expertise__isnull=False,
-                user__status="active",
+        try:
+            # IMPORTANT: keep this endpoint constant-memory.
+            # The homepage calls it anonymously; loading "all expertises" into a Python list
+            # can OOM a small production container and look like "backend crash on homepage".
+            qs = (
+                Expertise.objects.filter(
+                    what_offering__isnull=False,
+                    area_of_expertise__isnull=False,
+                    user__status="active",
+                )
+                .exclude(what_offering="")
+                .select_related("area_of_expertise")
+                .order_by("?")[:18]
             )
-            .exclude(what_offering="")
-            .select_related("area_of_expertise")
-        )
-        sample_size = min(18, len(pool))
-        sampled = random.sample(pool, sample_size) if len(pool) >= sample_size else pool
-        data = [
-            {
-                "industry": e.area_of_expertise.industry_name,
-                "what_offering": e.what_offering,
-            }
-            for e in sampled
-        ]
-        return Response(data)
+
+            data = [
+                {
+                    "industry": (e.area_of_expertise.industry_name if e.area_of_expertise else ""),
+                    "what_offering": (e.what_offering or ""),
+                }
+                for e in qs
+            ]
+            return Response(data)
+        except Exception:
+            # Fail "soft" for the public homepage; return empty sample rather than 500/crash.
+            logger.exception("Failed to generate public expertise sample")
+            return Response([])
