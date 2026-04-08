@@ -21,7 +21,7 @@ Without RLS enabled, anyone with your Supabase API key could potentially access 
 
 ```bash
 # Connect to your Supabase database
-psql "postgresql://postgres.xbqekpsyfldqajcefsjv:IvPsqi1jxDBQZpbA@aws-1-us-east-2.pooler.supabase.com:5432/postgres?sslmode=require"
+psql "postgresql://<db_user>:<db_password>@<db_host>:5432/postgres?sslmode=require"
 
 # Run the script
 \i scripts/enable_rls.sql
