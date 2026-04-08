@@ -12,7 +12,7 @@ from mensa_member_connect.utils.email_utils import (
     notify_user_registration,
 )
 from mensa_member_connect.views.custom_user_utils import validate_phone, get_local_group
-from mensa_member_connect.serializers.custom_user_serializers import CustomUserDetailSerializer
+from mensa_member_connect.serializers.custom_user_serializers import CustomUserAuthSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class CustomUserRegistrationViewSet(viewsets.ViewSet):
         refresh = RefreshToken.for_user(new_user)
         
         # Serialize user data
-        user_data = CustomUserDetailSerializer(new_user).data
+        user_data = CustomUserAuthSerializer(new_user).data
         
         logger.info("[USER_REG] Returning tokens for auto-login: email=%s", email)
         

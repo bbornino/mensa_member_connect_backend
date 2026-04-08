@@ -11,9 +11,15 @@ from mensa_member_connect.permissions import IsAdminRole
 
 
 class AdminActionViewSet(viewsets.ModelViewSet):
-    queryset = AdminAction.objects.all()
+    queryset = AdminAction.objects.all().order_by("-created_at")
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAdminRole]
+
+    def get_queryset(self):
+        queryset = AdminAction.objects.all().order_by("-created_at")
+        if self.action == "list":
+            return queryset[:30]
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":

@@ -19,9 +19,11 @@ from mensa_member_connect.models.custom_user import CustomUser
 from mensa_member_connect.serializers.custom_user_serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
-    CustomUserDetailSerializer,
+    CustomUserAuthSerializer,
 )
 from mensa_member_connect.utils.email_utils import send_password_reset_email
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +49,11 @@ class AuthenticateUserView(APIView):
             )
 
         try:
-            user = CustomUser.objects.get(email=email)
+            user = (
+                CustomUser.objects.select_related("industry", "local_group")
+                .defer("profile_photo")
+                .get(email=email)
+            )
         except CustomUser.DoesNotExist:
             logger.warning(
                 "Authentication failed: invalid password for email=%s", email
@@ -65,13 +71,94 @@ class AuthenticateUserView(APIView):
                 {
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
-                    "user": CustomUserDetailSerializer(user).data,
+                    "user": CustomUserAuthSerializer(user).data,
                 }
             )
 
         logger.warning("Authentication failed: invalid password for email=%s", email)
         return Response(
             {"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED
+        )
+
+
+class AuthenticateGoogleUserView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+        credential = request.data.get("credential")
+        if not credential:
+            return Response(
+                {"error": "Google credential is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        google_client_id = getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
+        if not google_client_id:
+            logger.error("Google OAuth client ID is not configured.")
+            return Response(
+                {"error": "Google login is not configured."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                credential,
+                google_requests.Request(),
+                google_client_id,
+            )
+        except Exception as e:
+            logger.warning("Google token verification failed: %s", e)
+            return Response(
+                {"error": "Invalid Google credential."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not idinfo.get("email_verified"):
+            return Response(
+                {"error": "Google email is not verified."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        email = idinfo.get("email")
+        if not email:
+            return Response(
+                {"error": "No email found in Google credential."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user = (
+                CustomUser.objects.select_related("industry", "local_group")
+                .defer("profile_photo")
+                .get(email=email)
+            )
+            created = False
+        except CustomUser.DoesNotExist:
+            user = CustomUser.objects.create_user(
+                email=email,
+                password=None,
+                first_name=idinfo.get("given_name", ""),
+                last_name=idinfo.get("family_name", ""),
+            )
+            created = True
+        needs_registration_completion = not bool(
+            user.member_id and user.local_group_id
+        )
+
+        refresh = RefreshToken.for_user(user)
+        logger.info(
+            "User authenticated via Google successfully: %s (created=%s)",
+            email,
+            created,
+        )
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": CustomUserAuthSerializer(user).data,
+                "needs_registration_completion": needs_registration_completion,
+            }
         )
 
 

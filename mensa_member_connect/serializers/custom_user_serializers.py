@@ -207,6 +207,37 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
         return f"data:image/{image_format};base64,{base64_data}"
 
 
+class CustomUserAuthSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer for auth/session bootstrap responses.
+    Excludes heavy/broad fields like photo base64 and auth relation fields.
+    """
+
+    industry = IndustryListSerializer(read_only=True)
+    local_group = LocalGroupMiniSerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "member_id",
+            "city",
+            "state",
+            "phone",
+            "role",
+            "status",
+            "occupation",
+            "industry",
+            "background",
+            "availability_status",
+            "show_contact_info",
+            "local_group",
+        ]
+
+
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField()
 

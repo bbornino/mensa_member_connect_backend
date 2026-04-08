@@ -1,6 +1,7 @@
 # mensa_member_connect/views/custom_user_views.py
 import logging
 import re
+from PIL import UnidentifiedImageError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -18,6 +19,7 @@ from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserDetailSerializer,
     CustomUserListSerializer,
     CustomUserExpertSerializer,
+    CustomUserAuthSerializer,
 )
 from mensa_member_connect.permissions import IsAdminRole
 from mensa_member_connect.utils.email_utils import (
@@ -25,6 +27,7 @@ from mensa_member_connect.utils.email_utils import (
     notify_user_registration,
     notify_user_approval,
 )
+from mensa_member_connect.utils.image_utils import compress_profile_photo_bytes
 
 
 logger = logging.getLogger(__name__)
@@ -53,8 +56,12 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="me")
     def user_profile(self, request):
-        user = request.user
-        serializer = CustomUserDetailSerializer(user)
+        user = (
+            CustomUser.objects.select_related("industry", "local_group")
+            .defer("profile_photo")
+            .get(id=request.user.id)
+        )
+        serializer = CustomUserAuthSerializer(user)
         return Response(serializer.data)
 
     def update(self, request, *args, **kwargs):
@@ -169,37 +176,43 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                 {"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate file size (2MB limit)
-        MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB in bytes
+        # Validate upload size before compression (10MB limit)
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB in bytes
         if file.size > MAX_FILE_SIZE:
             return Response(
-                {"error": "Image file size must be less than 2MB."},
+                {"error": "Image file size must be less than 10MB."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Validate file type
-        valid_content_types = ["image/jpeg", "image/jpg", "image/png", "image/gif"]
+        valid_content_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
         if file.content_type not in valid_content_types:
             return Response(
-                {"error": "Please upload a JPG, PNG, or GIF image."},
+                {"error": "Please upload a JPG, PNG, GIF, or WEBP image."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            # Read file bytes into the BinaryField
-            user.profile_photo = file.read()
+            compressed_photo = compress_profile_photo_bytes(file.read())
+            user.profile_photo = compressed_photo
             user.save()
 
             logger.info(
-                "[PHOTO_UPLOAD] User ID=%s uploaded photo (%d bytes, type=%s)",
+                "[PHOTO_UPLOAD] User ID=%s uploaded photo (original=%d bytes, compressed=%d bytes, type=%s)",
                 user.id,
                 file.size,
+                len(compressed_photo),
                 file.content_type,
             )
 
             return Response(
                 {"message": "Profile photo uploaded successfully."},
                 status=status.HTTP_200_OK,
+            )
+        except UnidentifiedImageError:
+            return Response(
+                {"error": "Unsupported or corrupted image file."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as e:
             return Response(

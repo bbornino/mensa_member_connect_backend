@@ -249,6 +249,7 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 30))
 
 # Frontend URL for password reset links
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "")
 EMAIL_SUBJECT_PREFIX = os.environ.get("EMAIL_SUBJECT_PREFIX", "[MENSA] ")
 
 # Admin and Manager notifications

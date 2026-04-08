@@ -20,7 +20,7 @@ from mensa_member_connect.models.connection_request import ConnectionRequest
 def stats(request):
     """
     Returns counts for dashboard:
-    - total users
+    - active users
     - total experts
     - total expertise records
     - total connection requests
@@ -28,9 +28,9 @@ def stats(request):
     user_viewset = CustomUserViewSet()
 
     data = {
-        "total_users": CustomUser.objects.count(),
-        "total_experts": user_viewset.list_experts_raw().count(),
-        "total_expertise": Expertise.objects.count(),
+        "active_users": CustomUser.objects.filter(status="active").count(),
+        "total_experts": user_viewset.list_experts_raw().filter(status="active").count(),
+        "total_expertise": Expertise.objects.filter(user__status="active").count(),
         "total_connection_requests": ConnectionRequest.objects.count(),
     }
     return Response(data)

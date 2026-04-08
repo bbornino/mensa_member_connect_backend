@@ -7,6 +7,7 @@ from rest_framework.authentication import BaseAuthentication
 from mensa_member_connect.views.custom_user_views import CustomUserViewSet
 from mensa_member_connect.views.custom_user_auth_views import (
     AuthenticateUserView,
+    AuthenticateGoogleUserView,
     PasswordResetRequestView,
     PasswordResetConfirmView,
     LogoutUserView,
@@ -47,6 +48,11 @@ urlpatterns = [
         "api/users/authenticate/",
         AuthenticateUserView.as_view(),
         name="user-authenticate",
+    ),
+    path(
+        "api/users/authenticate/google/",
+        AuthenticateGoogleUserView.as_view(),
+        name="user-authenticate-google",
     ),
     path(
         "api/users/password-reset-request/",
