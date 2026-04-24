@@ -22,10 +22,12 @@ from mensa_member_connect.serializers.custom_user_serializers import (
     CustomUserAuthSerializer,
 )
 from mensa_member_connect.permissions import IsAdminRole
+import os
 from mensa_member_connect.utils.email_utils import (
     notify_admin_new_registration,
     notify_user_registration,
     notify_user_approval,
+    send_email_via_mailgun_api,
 )
 from mensa_member_connect.utils.image_utils import compress_profile_photo_bytes
 
@@ -442,3 +444,112 @@ class CustomUserViewSet(viewsets.ModelViewSet):
         serializer = CustomUserExpertSerializer(experts, many=True)
         logger.info("[LIST_EXPERTS] Returning %d experts", experts.count())
         return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="bulk_email",
+        permission_classes=[IsAdminRole],
+    )
+    def bulk_email(self, request):
+        """
+        Send a custom email to a list of members.
+        POST /api/users/bulk_email/
+        Body: { user_ids: [1, 2, ...], subject: "...", body: "..." }
+        """
+        user_ids = request.data.get("user_ids", [])
+        subject = request.data.get("subject", "").strip()
+        body = request.data.get("body", "").strip()
+
+        if not user_ids or not isinstance(user_ids, list):
+            return Response(
+                {"error": "user_ids must be a non-empty list."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not subject:
+            return Response(
+                {"error": "subject is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not body:
+            return Response(
+                {"error": "body is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        recipients = CustomUser.objects.filter(id__in=user_ids).only(
+            "id", "email", "first_name", "last_name"
+        )
+
+        if not recipients.exists():
+            return Response(
+                {"error": "No matching users found for the provided IDs."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        sent = []
+        failed = []
+        html_body = body.replace("\n", "<br>")
+        use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
+
+        for recipient in recipients:
+            success = False
+            error_detail = None
+
+            if use_mailgun_api:
+                success = send_email_via_mailgun_api(
+                    to_email=recipient.email,
+                    subject=subject,
+                    text_content=body,
+                    html_content=f"<p>{html_body}</p>",
+                )
+                if not success:
+                    logger.warning("[BULK_EMAIL] Mailgun API failed for %s, falling back to SMTP", recipient.email)
+
+            if not success:
+                try:
+                    from django.core.mail import EmailMultiAlternatives
+                    from django.conf import settings as django_settings
+                    msg = EmailMultiAlternatives(
+                        subject=subject,
+                        body=body,
+                        from_email=django_settings.DEFAULT_FROM_EMAIL,
+                        to=[recipient.email],
+                    )
+                    msg.attach_alternative(f"<p>{html_body}</p>", "text/html")
+                    msg.send(fail_silently=False)
+                    success = True
+                except Exception as e:
+                    error_detail = str(e)
+                    logger.error("[BULK_EMAIL] SMTP failed for %s: %s", recipient.email, e)
+
+            if success:
+                sent.append(recipient.email)
+            else:
+                failed.append({"email": recipient.email, "error": error_detail})
+
+        if sent:
+            action_message = (
+                f"Sent bulk email '{subject[:40]}' to {len(sent)} member(s)."
+            )
+            AdminAction.objects.create(
+                admin=request.user,
+                target_user=None,
+                action=action_message,
+            )
+            logger.info(
+                "[BULK_EMAIL] Admin %s sent bulk email '%s' to %d member(s). Failed: %d.",
+                request.user.get_full_name(),
+                subject,
+                len(sent),
+                len(failed),
+            )
+
+        return Response(
+            {
+                "sent": len(sent),
+                "failed": len(failed),
+                "failed_emails": failed,
+            },
+            status=status.HTTP_200_OK,
+        )
