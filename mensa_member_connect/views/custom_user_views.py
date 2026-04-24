@@ -489,19 +489,27 @@ class CustomUserViewSet(viewsets.ModelViewSet):
 
         sent = []
         failed = []
-        html_body = body.replace("\n", "<br>")
         use_mailgun_api = os.environ.get("USE_MAILGUN_API", "True").lower() in ("1", "true", "yes")
 
         for recipient in recipients:
             success = False
             error_detail = None
 
+            context = {
+                "subject": subject,
+                "body": body,
+                "first_name": recipient.first_name or "",
+                "user_name": recipient.get_full_name() or recipient.email,
+            }
+            from django.template.loader import render_to_string
+            html_content = render_to_string("emails/bulk_email.html", context)
+
             if use_mailgun_api:
                 success = send_email_via_mailgun_api(
                     to_email=recipient.email,
                     subject=subject,
                     text_content=body,
-                    html_content=f"<p>{html_body}</p>",
+                    html_content=html_content,
                 )
                 if not success:
                     logger.warning("[BULK_EMAIL] Mailgun API failed for %s, falling back to SMTP", recipient.email)
@@ -516,7 +524,7 @@ class CustomUserViewSet(viewsets.ModelViewSet):
                         from_email=django_settings.DEFAULT_FROM_EMAIL,
                         to=[recipient.email],
                     )
-                    msg.attach_alternative(f"<p>{html_body}</p>", "text/html")
+                    msg.attach_alternative(html_content, "text/html")
                     msg.send(fail_silently=False)
                     success = True
                 except Exception as e:

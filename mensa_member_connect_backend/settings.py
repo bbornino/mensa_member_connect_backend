@@ -222,7 +222,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # - For local testing, you can switch to 'django.core.mail.backends.console.EmailBackend'
 
 # Default sender address for outgoing emails
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "no-reply@namme.us")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "team@namme.us")
 
 # Backend to handle email delivery
 EMAIL_BACKEND = os.environ.get(
