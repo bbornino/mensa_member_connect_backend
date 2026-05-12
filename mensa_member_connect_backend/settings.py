@@ -44,6 +44,11 @@ ALLOWED_HOSTS = (
     os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
 )
 
+# Railway terminates SSL at the edge — trust its X-Forwarded-Proto header so
+# Django generates https:// URLs instead of http://.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+
 
 # Application definition
 
